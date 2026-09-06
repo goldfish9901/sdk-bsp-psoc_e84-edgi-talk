@@ -104,7 +104,7 @@ int main(void)
     {
         uint32_t now = rt_tick_get_millisecond();
 
-        if ((now - last_led_ms) >= 500U)
+        if ((now - last_led_ms) >= 100U)
         {
             led_on = !led_on;
             rt_pin_write(LED_PIN_G, led_on ? PIN_HIGH : PIN_LOW);

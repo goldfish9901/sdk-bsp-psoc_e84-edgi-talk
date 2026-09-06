@@ -19,7 +19,7 @@ static void title_create(lv_obj_t *screen, lv_coord_t scr_w)
 {
     s_title_label = lv_label_create(screen);
     lv_obj_remove_flag(s_title_label, LV_OBJ_FLAG_CLICKABLE);
-    lv_obj_set_style_text_color(s_title_label, lv_color_hex(0xffffff), 0);
+    lv_obj_set_style_text_color(s_title_label, lv_color_hex(0xaaffff), 0);
     lv_obj_set_style_text_font(s_title_label, &lv_font_montserrat_20, 0);
     lv_obj_set_width(s_title_label, scr_w);
     lv_obj_set_style_text_align(s_title_label, LV_TEXT_ALIGN_CENTER, 0);
