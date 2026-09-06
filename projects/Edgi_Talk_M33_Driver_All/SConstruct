@@ -212,6 +212,8 @@ else:
     objs.extend(SConscript('../../libraries/components/mtb-ipc/SConscript', variant_dir='build/libraries/components/mtb-ipc', duplicate=0))
     objs.extend(SConscript('../../libraries/components/littlefs/SConscript', variant_dir='build/libraries/components/littlefs', duplicate=0))
     objs.extend(SConscript('../../libraries/Common/board/SConscript', variant_dir='build/libraries/Common/board', duplicate=0))
+env.Tool('compilation_db')
+env.CompilationDatabase()
 
 # make a building
 DoBuilding(TARGET, objs)
@@ -249,3 +251,4 @@ if platform.system() == 'Windows':
         print("edgeprotecttools or boot config not found, skipping secure image packaging")
         print("EDGEPROTECTTOOLS:", EDGEPROTECTTOOLS)
         print("BOOT_CONFIG_TEMPLATE:", BOOT_CONFIG_TEMPLATE)
+print("Compiling with compilation database")

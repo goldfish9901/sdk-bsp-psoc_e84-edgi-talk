@@ -1,0 +1,199 @@
+{
+    "folders": [
+        {
+            "path": "."
+        },
+        {
+            "path": "..\\..\\libraries\\Common\\board\\ports",
+            "name": "rtthread/libraries/Common/board/ports"
+        },
+        {
+            "path": "..\\..\\libraries\\Common\\board\\ports\\audio",
+            "name": "rtthread/libraries/Common/board/ports/audio"
+        },
+        {
+            "path": "..\\..\\libraries\\Common\\board\\ports\\fal",
+            "name": "rtthread/libraries/Common/board/ports/fal"
+        },
+        {
+            "path": "..\\..\\libraries\\Common\\board\\ports\\filesystem",
+            "name": "rtthread/libraries/Common/board/ports/filesystem"
+        },
+        {
+            "path": "..\\..\\libraries\\HAL_Drivers",
+            "name": "rtthread/libraries/HAL_Drivers"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\Infineon_retarget-io-latest",
+            "name": "rtthread/libraries/components/Infineon_retarget-io-latest"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\async-transfer\\source",
+            "name": "rtthread/libraries/components/async-transfer/source"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\littlefs",
+            "name": "rtthread/libraries/components/littlefs"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\mtb-device-support-pse8xxgp\\device-utils\\syspm\\source",
+            "name": "rtthread/libraries/components/mtb-device-support-pse8xxgp/device-utils/syspm/source"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\mtb-device-support-pse8xxgp\\hal\\source",
+            "name": "rtthread/libraries/components/mtb-device-support-pse8xxgp/hal/source"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\mtb-device-support-pse8xxgp\\pdl\\devices\\source",
+            "name": "rtthread/libraries/components/mtb-device-support-pse8xxgp/pdl/devices/source"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\mtb-device-support-pse8xxgp\\pdl\\drivers\\source",
+            "name": "rtthread/libraries/components/mtb-device-support-pse8xxgp/pdl/drivers/source"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\mtb-device-support-pse8xxgp\\pdl\\drivers\\source\\TOOLCHAIN_GCC_ARM",
+            "name": "rtthread/libraries/components/mtb-device-support-pse8xxgp/pdl/drivers/source/TOOLCHAIN_GCC_ARM"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\mtb-ipc\\source",
+            "name": "rtthread/libraries/components/mtb-ipc/source"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\mtb-srf",
+            "name": "rtthread/libraries/components/mtb-srf"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\serial-memory\\source",
+            "name": "rtthread/libraries/components/serial-memory/source"
+        },
+        {
+            "path": "..\\..\\rt-thread\\components\\dfs\\dfs_v1\\filesystems\\devfs",
+            "name": "rtthread/rt-thread/components/dfs/dfs_v1/filesystems/devfs"
+        },
+        {
+            "path": "..\\..\\rt-thread\\components\\dfs\\dfs_v1\\filesystems\\elmfat",
+            "name": "rtthread/rt-thread/components/dfs/dfs_v1/filesystems/elmfat"
+        },
+        {
+            "path": "..\\..\\rt-thread\\components\\dfs\\dfs_v1\\filesystems\\romfs",
+            "name": "rtthread/rt-thread/components/dfs/dfs_v1/filesystems/romfs"
+        },
+        {
+            "path": "..\\..\\rt-thread\\components\\dfs\\dfs_v1\\include",
+            "name": "rtthread/rt-thread/components/dfs/dfs_v1/include"
+        },
+        {
+            "path": "..\\..\\rt-thread\\components\\dfs\\dfs_v1\\src",
+            "name": "rtthread/rt-thread/components/dfs/dfs_v1/src"
+        },
+        {
+            "path": "..\\..\\rt-thread\\components\\drivers\\audio",
+            "name": "rtthread/rt-thread/components/drivers/audio"
+        },
+        {
+            "path": "..\\..\\rt-thread\\components\\drivers\\core",
+            "name": "rtthread/rt-thread/components/drivers/core"
+        },
+        {
+            "path": "..\\..\\rt-thread\\components\\drivers\\i2c",
+            "name": "rtthread/rt-thread/components/drivers/i2c"
+        },
+        {
+            "path": "..\\..\\rt-thread\\components\\drivers\\include",
+            "name": "rtthread/rt-thread/components/drivers/include"
+        },
+        {
+            "path": "..\\..\\rt-thread\\components\\drivers\\ipc",
+            "name": "rtthread/rt-thread/components/drivers/ipc"
+        },
+        {
+            "path": "..\\..\\rt-thread\\components\\drivers\\misc",
+            "name": "rtthread/rt-thread/components/drivers/misc"
+        },
+        {
+            "path": "..\\..\\rt-thread\\components\\drivers\\mtd",
+            "name": "rtthread/rt-thread/components/drivers/mtd"
+        },
+        {
+            "path": "..\\..\\rt-thread\\components\\drivers\\rtc",
+            "name": "rtthread/rt-thread/components/drivers/rtc"
+        },
+        {
+            "path": "..\\..\\rt-thread\\components\\drivers\\sdio",
+            "name": "rtthread/rt-thread/components/drivers/sdio"
+        },
+        {
+            "path": "..\\..\\rt-thread\\components\\drivers\\serial",
+            "name": "rtthread/rt-thread/components/drivers/serial"
+        },
+        {
+            "path": "..\\..\\rt-thread\\components\\fal\\inc",
+            "name": "rtthread/rt-thread/components/fal/inc"
+        },
+        {
+            "path": "..\\..\\rt-thread\\components\\fal\\src",
+            "name": "rtthread/rt-thread/components/fal/src"
+        },
+        {
+            "path": "..\\..\\rt-thread\\components\\finsh",
+            "name": "rtthread/rt-thread/components/finsh"
+        },
+        {
+            "path": "..\\..\\rt-thread\\components\\libc\\compilers\\common",
+            "name": "rtthread/rt-thread/components/libc/compilers/common"
+        },
+        {
+            "path": "..\\..\\rt-thread\\components\\libc\\compilers\\common\\include",
+            "name": "rtthread/rt-thread/components/libc/compilers/common/include"
+        },
+        {
+            "path": "..\\..\\rt-thread\\components\\libc\\compilers\\newlib",
+            "name": "rtthread/rt-thread/components/libc/compilers/newlib"
+        },
+        {
+            "path": "..\\..\\rt-thread\\components\\libc\\posix\\io\\epoll",
+            "name": "rtthread/rt-thread/components/libc/posix/io/epoll"
+        },
+        {
+            "path": "..\\..\\rt-thread\\components\\libc\\posix\\io\\eventfd",
+            "name": "rtthread/rt-thread/components/libc/posix/io/eventfd"
+        },
+        {
+            "path": "..\\..\\rt-thread\\components\\libc\\posix\\io\\poll",
+            "name": "rtthread/rt-thread/components/libc/posix/io/poll"
+        },
+        {
+            "path": "..\\..\\rt-thread\\components\\libc\\posix\\ipc",
+            "name": "rtthread/rt-thread/components/libc/posix/ipc"
+        },
+        {
+            "path": "..\\..\\rt-thread\\include",
+            "name": "rtthread/rt-thread/include"
+        },
+        {
+            "path": "..\\..\\rt-thread\\libcpu\\arm\\common",
+            "name": "rtthread/rt-thread/libcpu/arm/common"
+        },
+        {
+            "path": "..\\..\\rt-thread\\libcpu\\arm\\cortex-m33",
+            "name": "rtthread/rt-thread/libcpu/arm/cortex-m33"
+        },
+        {
+            "path": "..\\..\\rt-thread\\src",
+            "name": "rtthread/rt-thread/src"
+        },
+        {
+            "path": "..\\libs\\TARGET_APP_KIT_PSE84_EVAL_EPC2",
+            "name": "rtthread/libs/TARGET_APP_KIT_PSE84_EVAL_EPC2"
+        },
+        {
+            "path": "..\\libs\\TARGET_APP_KIT_PSE84_EVAL_EPC2\\COMPONENT_CM33\\COMPONENT_NON_SECURE_DEVICE",
+            "name": "rtthread/libs/TARGET_APP_KIT_PSE84_EVAL_EPC2/COMPONENT_CM33/COMPONENT_NON_SECURE_DEVICE"
+        },
+        {
+            "path": "..\\libs\\TARGET_APP_KIT_PSE84_EVAL_EPC2\\config\\GeneratedSource",
+            "name": "rtthread/libs/TARGET_APP_KIT_PSE84_EVAL_EPC2/config/GeneratedSource"
+        }
+    ]
+}
