@@ -1,38 +1,56 @@
 import pathlib
-import sys
 import logging
 import subprocess
 import pydantic_cli
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
+from pydantic import Field
 
+class OpenOcdCmdLineConfig(pydantic_cli.Cmd):
+    openOcdInstallDir: pathlib.Path = Field(
+        ...,
+        description="OpenOCD 的安装目录",
+    )
 
-class OpenOcdCmdLineConfig:
+    projectMainDir: pathlib.Path = Field(
+        default_factory=lambda: pathlib.Path(__file__).parent,
+        description="项目主目录",
+    )
 
-    def __init__(
-        self,
-        openOcdInstallDir: pathlib.Path,
-        projectMainDir: pathlib.Path = None,
-        scripts: list[pathlib.Path] = None,
-        cfgFiles: list[pathlib.Path] = None,
-        commands: list[str] = None,
-    ):
-        self.openOcdInstallDir = openOcdInstallDir
-        self.projectMainDir = projectMainDir or pathlib.Path(__file__).parent
-        self.cmdOcd = openOcdInstallDir / "bin" / "openocd.exe"
-        self.defaultScriptPath = openOcdInstallDir / "scripts"
-        self.scripts: list[pathlib.Path] = scripts or [
-            openOcdInstallDir / "scripts",
-            openOcdInstallDir / "flm" / "cypress" / "cat4",
-        ]
-        self.cfgFiles: list[pathlib.Path] = cfgFiles or [
+    scripts: list[pathlib.Path] | None = None
+    cfgFiles: list[pathlib.Path] | None = None
+    commands: list[str] | None = None
+
+    @property
+    def cmdOcd(self) -> pathlib.Path:
+        return self.openOcdInstallDir / "bin" / "openocd.exe"
+
+    @property
+    def defaultScriptPath(self) -> pathlib.Path:
+        return self.openOcdInstallDir / "scripts"
+
+    def build_args(self):
+        logging.info("self: %s", self)
+        
+        cfgFiles = self.cfgFiles or [
             self.defaultScriptPath / "interface" / "kitprog3.cfg",
             self.defaultScriptPath / "target" / "infineon" / "pse84xgxs2.cfg",
         ]
-        hex = pathlib.Path(__file__).parent / "build" / "rtthread.hex"
-        hex_str = str(hex.relative_to(self.projectMainDir).as_posix())
-        self.commands: list[str] = commands or [
+        scripts = self.scripts or [
+            self.openOcdInstallDir / "scripts",
+            self.openOcdInstallDir / "flm" / "cypress" / "cat4",
+        ]
+        hexFileCandidates = [
+            self.projectMainDir / "build" / "rtthread.hex",
+            self.projectMainDir /  "rtthread.hex"
+        ]
+        logging.info("hexFileCandidates: %s", hexFileCandidates)
+        hexFile = [
+            file for file in hexFileCandidates if file.exists()
+        ][0]
+        
+
+        hexStr = hexFile.relative_to(self.projectMainDir).as_posix()
+
+        commands = self.commands or [
             "set QSPI_FLASHLOADER ../flm/cypress/cat4/PSE84_SMIF.FLM",
             "transport select swd",
             "set ENABLE_ACQUIRE 0",
@@ -40,37 +58,39 @@ class OpenOcdCmdLineConfig:
                 [
                     "init",
                     "reset init",
-                    f"flash write_image erase {hex_str}",
+                    f"flash write_image erase {hexStr}",
                     "reset run",
                     "exit",
                 ]
             ),
         ]
 
-    def build_args(self):
         args = [str(self.cmdOcd)]
-        for script in self.scripts:
-            args.append("-s")
+
+        for script in scripts:
             if not script.exists():
                 raise FileNotFoundError(f"script {script} not found")
-            args.append(str(script.as_posix()))
-        for cfg in self.cfgFiles:
-            args.append("-f")
-            args.append(str(cfg.relative_to(self.defaultScriptPath).as_posix()))
-        for cmd in self.commands:
-            args.append("-c")
-            args.append(cmd)
+
+            args.extend(["-s", str(script.as_posix())])
+
+        for cfg in cfgFiles:
+            args.extend(
+                [
+                    "-f",
+                    cfg.relative_to(self.defaultScriptPath).as_posix(),
+                ]
+            )
+
+        for command in commands:
+            args.extend(["-c", command])
+
         return args
 
-class Entry(pydantic_cli.Cmd):
-    cwd: pathlib.Path = pathlib.Path(__file__).parent
     def run(self):
-        cfg = OpenOcdCmdLineConfig(
-            pathlib.Path("E:\\sdk\\openocd-5.19.0.4782-windows\\openocd")
-        )
-        cmd = cfg.build_args()
-        logging.info(f"cmd: {cmd}")
+        cmd = self.build_args()
+        logging.info("cmd: %s", cmd)
         subprocess.run(cmd, check=True)
 
+
 if __name__ == "__main__":
-    pydantic_cli.run_and_exit(Entry)
+    pydantic_cli.run_and_exit(OpenOcdCmdLineConfig)
