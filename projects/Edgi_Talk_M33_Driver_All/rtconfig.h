@@ -276,7 +276,6 @@
 #define LFS_BLOCK_CYCLES -1
 #define LFS_THREADSAFE
 #define LFS_LOOKAHEAD_MAX 128
-#define RT_DEF_LFS_DRIVERS 1
 /* end of system packages */
 
 /* peripheral libraries and drivers */
@@ -294,30 +293,6 @@
 /* Kendryte SDK */
 
 /* end of Kendryte SDK */
-
-/* WCH HAL & SDK Drivers */
-
-/* end of WCH HAL & SDK Drivers */
-
-/* AT32 HAL & SDK Drivers */
-
-/* end of AT32 HAL & SDK Drivers */
-
-/* HC32 DDL Drivers */
-
-/* end of HC32 DDL Drivers */
-
-/* NXP HAL & SDK Drivers */
-
-/* end of NXP HAL & SDK Drivers */
-
-/* NUVOTON Drivers */
-
-/* end of NUVOTON Drivers */
-
-/* GD32 Drivers */
-
-/* end of GD32 Drivers */
 /* end of HAL & SDK Drivers */
 
 /* sensors drivers */
@@ -406,6 +381,7 @@
 
 /* Select SOC Multi Core Mode */
 
+#define SOC_Enable_CM55
 /* end of Select SOC Multi Core Mode */
 #define SOC_SERIES_IFX_PSOCE84
 #define KIT_PROCE84_EVK_M33
@@ -443,6 +419,7 @@
 #define BSP_USING_SDCARD
 #define BSP_USING_FLASH
 #define BSP_USING_LITTLEFS
+#define RT_DEF_LFS_DRIVERS 1
 /* end of On-chip Peripheral Drivers */
 /* end of Hardware Drivers Config */
 

@@ -3,6 +3,8 @@ import logging
 import subprocess
 import pydantic_cli
 from pydantic import Field
+import os
+
 
 class OpenOcdCmdLineConfig(pydantic_cli.Cmd):
     openOcdInstallDir: pathlib.Path = Field(
@@ -11,7 +13,7 @@ class OpenOcdCmdLineConfig(pydantic_cli.Cmd):
     )
 
     projectMainDir: pathlib.Path = Field(
-        default_factory=lambda: pathlib.Path(__file__).parent,
+        default_factory=pathlib.Path.cwd,
         description="项目主目录",
     )
 
@@ -29,7 +31,7 @@ class OpenOcdCmdLineConfig(pydantic_cli.Cmd):
 
     def build_args(self):
         logging.info("self: %s", self)
-        
+
         cfgFiles = self.cfgFiles or [
             self.defaultScriptPath / "interface" / "kitprog3.cfg",
             self.defaultScriptPath / "target" / "infineon" / "pse84xgxs2.cfg",
@@ -40,13 +42,10 @@ class OpenOcdCmdLineConfig(pydantic_cli.Cmd):
         ]
         hexFileCandidates = [
             self.projectMainDir / "build" / "rtthread.hex",
-            self.projectMainDir /  "rtthread.hex"
+            self.projectMainDir / "rtthread.hex",
         ]
         logging.info("hexFileCandidates: %s", hexFileCandidates)
-        hexFile = [
-            file for file in hexFileCandidates if file.exists()
-        ][0]
-        
+        hexFile = [file for file in hexFileCandidates if file.exists()][0]
 
         hexStr = hexFile.relative_to(self.projectMainDir).as_posix()
 
@@ -72,7 +71,10 @@ class OpenOcdCmdLineConfig(pydantic_cli.Cmd):
                 raise FileNotFoundError(f"script {script} not found")
 
             args.extend(["-s", str(script.as_posix())])
-
+        args.extend(["-c", "array set SMIF_BANKS {0 {addr 0x60000000 size 0x4000000}}"])
+        args.extend(
+            ["-c", "set QSPI_FLASHLOADER ../flm/infineon/pse8x6/PSE84_SMIF.FLM"]
+        )
         for cfg in cfgFiles:
             args.extend(
                 [
@@ -88,6 +90,9 @@ class OpenOcdCmdLineConfig(pydantic_cli.Cmd):
 
     def run(self):
         cmd = self.build_args()
+        subprocess.run(
+            ["scons", f"-j{int(os.cpu_count() * 4.0/5)}"], cwd=self.projectMainDir
+        )
         logging.info("cmd: %s", cmd)
         subprocess.run(cmd, check=True)
 
