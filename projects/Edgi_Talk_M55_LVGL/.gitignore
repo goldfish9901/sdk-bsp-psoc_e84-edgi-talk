@@ -44,3 +44,4 @@ cconfig.h
 /rt-thread
 /tools
 /cmake-build-debug/
+/exp-docs/

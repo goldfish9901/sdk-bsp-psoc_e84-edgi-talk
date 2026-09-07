@@ -241,34 +241,12 @@
 /* Kendryte SDK */
 
 /* end of Kendryte SDK */
-
-/* WCH HAL & SDK Drivers */
-
-/* end of WCH HAL & SDK Drivers */
-
-/* AT32 HAL & SDK Drivers */
-
-/* end of AT32 HAL & SDK Drivers */
-
-/* HC32 DDL Drivers */
-
-/* end of HC32 DDL Drivers */
-
-/* NXP HAL & SDK Drivers */
-
-/* end of NXP HAL & SDK Drivers */
-
-/* NUVOTON Drivers */
-
-/* end of NUVOTON Drivers */
-
-/* GD32 Drivers */
-
-/* end of GD32 Drivers */
 /* end of HAL & SDK Drivers */
 
 /* sensors drivers */
 
+#define PKG_USING_AHT10
+#define PKG_USING_AHT10_LATEST_VERSION
 /* end of sensors drivers */
 
 /* touch drivers */
@@ -353,6 +331,9 @@
 /* Onboard Peripheral Drivers */
 
 #define BSP_USING_USB_TO_UART
+#define BSP_USING_AHT20
+#define PKG_USING_AHT10_SAMPLE
+#define PKG_AHT10_I2C_BUS_NAME "i2c1"
 #define BSP_USING_LCD
 #define COMPONENT_MTB_DISPLAY_tl043wvv02
 #define M55_BSP_LCD_ROTATION_0
@@ -374,8 +355,8 @@
 #define BSP_USING_I2C
 #define BSP_USING_HW_I2C0
 #define BSP_USING_SOFT_I2C1
-#define BSP_SOFT_I2C1_SCL_PIN 105
-#define BSP_SOFT_I2C1_SDA_PIN 106
+#define BSP_SOFT_I2C1_SCL_PIN 75
+#define BSP_SOFT_I2C1_SDA_PIN 74
 #define BSP_USING_UART
 #define BSP_USING_UART2
 #define BSP_USING_HYPERAM
