@@ -48,6 +48,16 @@ void lv_user_gui_init(void)
 {
     ui_thermometer_init();
 }
+#define LCD_BL_GPIO_NUM    GET_PIN(15, 7)   /* LCD 背光电源开关 */
+#define BL_PWM_DISP_CTRL   GET_PIN(20, 6)   /* LCD PWM 亮度调节 */
+
+static void m55_lcd_backlight_enable(void)
+{
+    rt_pin_mode(LCD_BL_GPIO_NUM, PIN_MODE_OUTPUT);
+    rt_pin_mode(BL_PWM_DISP_CTRL, PIN_MODE_OUTPUT);
+    rt_pin_write(LCD_BL_GPIO_NUM, PIN_HIGH);
+    rt_pin_write(BL_PWM_DISP_CTRL, PIN_HIGH);
+}
 
 static float thermo_absf(float value)
 {
@@ -140,9 +150,11 @@ int main(void)
     rt_pin_mode(BUTTON_PIN, PIN_MODE_INPUT_PULLUP);
     rt_pin_attach_irq(BUTTON_PIN, PIN_IRQ_MODE_FALLING, thermometer_key_callback, RT_NULL);
     rt_pin_irq_enable(BUTTON_PIN, PIN_IRQ_ENABLE);
-
     lvgl_thread_init();
-    rt_thread_mdelay(2000);
+    rt_thread_mdelay(500);           /* 给 LVGL 首帧留点时间 */
+    m55_lcd_backlight_enable();      /* 点亮背光 */
+    rt_thread_mdelay(1500);
+
 
     g_aht10_dev = aht10_init(PKG_AHT10_I2C_BUS_NAME);
     if (g_aht10_dev == RT_NULL)
