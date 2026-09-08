@@ -1,104 +1,173 @@
-/*
- * Copyright (c) 2006-2024, RT-Thread Development Team
- *
- * SPDX-License-Identifier: Apache-2.0
- *
- * Change Logs:
- * Date           Author       Notes
- * 2024-01-01     RT-Thread    First version
- */
-
 #include <rtthread.h>
 #include <rtdevice.h>
-#include <rthw.h>
 #include <board.h>
+#include <lv_rt_thread_conf.h>
+#include "lv_port_disp.h"
+#include "aht10.h"
+#include "exam_shared.h"
 
-/*****************************************************************************
- * Macro Definitions
- *****************************************************************************/
-#define DBG_TAG    "main"
-#define DBG_LVL    DBG_INFO
-#include <rtdbg.h>
+#define LED_PIN_B                 GET_PIN(16, 5)
+#define LED_PIN_G                 GET_PIN(16, 6)
+#define LED_PIN_R                 GET_PIN(16, 7)
+#define LED_ON_LEVEL              PIN_HIGH
+#define LED_OFF_LEVEL             PIN_LOW
+#define BUTTON_PIN                GET_PIN(8, 3)
+#define SAMPLE_PERIOD_MS          1000
+#define LED_REFRESH_MS            10
 
-/* LED Pin */
-#define LED_PIN_GREEN       GET_PIN(16, 6)
-
-/* UI initialization timeout (ms) */
-#define UI_INIT_TIMEOUT_MS  5000
-
-#define LCD_BL_GPIO_NUM GET_PIN(15, 7)
-#define BL_PWM_DISP_CTRL GET_PIN(20, 6)
-
-#ifndef BSP_LCD_STARTUP_STABILIZE_MS
-#define BSP_LCD_STARTUP_STABILIZE_MS 1500U
-#endif
-
-#ifndef BSP_LCD_FIRST_FRAME_DELAY_MS
-#define BSP_LCD_FIRST_FRAME_DELAY_MS 300U
-#endif
-
-/*****************************************************************************
- * External Function Declarations
- *****************************************************************************/
-extern void xiaozhi_ui_init(void);
-extern rt_err_t xiaozhi_ui_wait_ready(rt_int32_t timeout);
-extern void wifi_manager_init(void);
-
-/*****************************************************************************
- * Main Entry
- *****************************************************************************/
-
-static void m55_lvgl_cpu_cache_enable(void)
+volatile thermometer_shared_t g_thermometer_shared =
 {
-#if defined(BSP_LVGL_ENABLE_CPU_CACHE) && defined(RT_USING_CACHE)
-#if defined(__ICACHE_PRESENT) && (__ICACHE_PRESENT == 1U)
-    if (!rt_hw_cpu_icache_status())
-    {
-        rt_hw_cpu_icache_enable();
-    }
-#endif
+    THERMOMETER_SHARED_MAGIC,
+    0,
+    0.0f,
+    0.0f,
+    0,
+    0,
+    0,
+    0
+};
 
-#if defined(__DCACHE_PRESENT) && (__DCACHE_PRESENT == 1U)
-    if (!rt_hw_cpu_dcache_status())
-    {
-        rt_hw_cpu_dcache_enable();
-    }
-#endif
+static aht10_device_t g_aht10_dev = RT_NULL;
 
-    LOG_I("M55 cache enabled: I=%d D=%d",
-          rt_hw_cpu_icache_status(),
-          rt_hw_cpu_dcache_status());
-#endif
+void ui_thermometer_init(void);
+
+static void thermometer_shared_reset(void)
+{
+    /* 单烧录工程不再依赖跨核共享区，启动时明确初始化 UI 数据缓存。 */
+    g_thermometer_shared.magic = THERMOMETER_SHARED_MAGIC;
+    g_thermometer_shared.sequence = 0;
+    g_thermometer_shared.temperature = 0.0f;
+    g_thermometer_shared.humidity = 0.0f;
+    g_thermometer_shared.paused = 0;
+    g_thermometer_shared.alarm = 0;
+    g_thermometer_shared.sensor_ok = 0;
+    g_thermometer_shared.reserved = 0;
 }
 
-static void m55_lcd_backlight_enable(void)
+void lv_user_gui_init(void)
 {
-    rt_pin_mode(LCD_BL_GPIO_NUM, PIN_MODE_OUTPUT);
-    rt_pin_mode(BL_PWM_DISP_CTRL, PIN_MODE_OUTPUT);
-    rt_pin_write(LCD_BL_GPIO_NUM, PIN_HIGH);
-    rt_pin_write(BL_PWM_DISP_CTRL, PIN_HIGH);
+    ui_thermometer_init();
+}
+
+static float thermo_absf(float value)
+{
+    return value < 0.0f ? -value : value;
+}
+
+static void thermometer_key_callback(void *args)
+{
+    (void)args;
+
+    /* 中断里只翻转暂停标志，主循环负责所有较慢的传感器读数工作。 */
+    g_thermometer_shared.paused = !g_thermometer_shared.paused;
+}
+
+static void thermometer_led_all_off(void)
+{
+    rt_pin_write(LED_PIN_R, LED_OFF_LEVEL);
+    rt_pin_write(LED_PIN_G, LED_OFF_LEVEL);
+    rt_pin_write(LED_PIN_B, LED_OFF_LEVEL);
+}
+
+static void thermometer_led_update(float temperature, float humidity)
+{
+    rt_tick_t now;
+    rt_uint8_t blink_on;
+    thermo_comfort_level_t level;
+
+    /* 板载三色灯按 HIGH 点亮、LOW 熄灭处理。
+     * 每 10ms 重写一次三灯状态，压住 M33 残留程序的蓝灯心跳。 */
+    now = rt_tick_get();
+    blink_on = ((now / rt_tick_from_millisecond(1000)) % 2) ? 1 : 0;
+    level = thermo_get_comfort_level(temperature, humidity);
+
+    thermometer_led_all_off();
+
+    switch (level)
+    {
+    case THERMO_COMFORT_ALARM:
+        rt_pin_write(LED_PIN_R, LED_ON_LEVEL);
+        break;
+    case THERMO_COMFORT_WARM:
+        rt_pin_write(LED_PIN_R, blink_on ? LED_ON_LEVEL : LED_OFF_LEVEL);
+        break;
+    case THERMO_COMFORT_DRY_COOL:
+        rt_pin_write(LED_PIN_B, blink_on ? LED_ON_LEVEL : LED_OFF_LEVEL);
+        break;
+    case THERMO_COMFORT_GOOD:
+    default:
+        rt_pin_write(LED_PIN_G, blink_on ? LED_ON_LEVEL : LED_OFF_LEVEL);
+        break;
+    }
+}
+
+static void thermometer_sample_once(void)
+{
+    float temperature;
+    float humidity;
+    rt_uint8_t alarm;
+
+    if (g_aht10_dev == RT_NULL)
+    {
+        return;
+    }
+
+    humidity = aht10_read_humidity(g_aht10_dev);
+    temperature = aht10_read_temperature(g_aht10_dev);
+    alarm = (thermo_get_comfort_level(temperature, humidity) == THERMO_COMFORT_ALARM) ? 1 : 0;
+
+    g_thermometer_shared.temperature = temperature;
+    g_thermometer_shared.humidity = humidity;
+    g_thermometer_shared.alarm = alarm;
+    g_thermometer_shared.sensor_ok = 1;
+    g_thermometer_shared.sequence++;
+
+    rt_kprintf("[Single Thermo] temp=%d.%d C, humi=%d.%d %%, alarm=%d, seq=%u\r\n",
+               (int)temperature, (int)(thermo_absf(temperature) * 10) % 10,
+               (int)humidity, (int)(thermo_absf(humidity) * 10) % 10,
+               alarm, g_thermometer_shared.sequence);
 }
 
 int main(void)
 {
-    LOG_I("Cortex-M55 started");
-#ifdef BSP_USING_XiaoZhi
-    m55_lvgl_cpu_cache_enable();
-    rt_thread_mdelay(BSP_LCD_STARTUP_STABILIZE_MS);
+    rt_kprintf("Single Thermometer M55: AHT20 + LVGL + key/LED\r\n");
+    thermometer_shared_reset();
 
-    /* Initialize UI subsystem */
-    xiaozhi_ui_init();
+    rt_pin_mode(LED_PIN_R, PIN_MODE_OUTPUT);
+    rt_pin_mode(LED_PIN_G, PIN_MODE_OUTPUT);
+    rt_pin_mode(LED_PIN_B, PIN_MODE_OUTPUT);
+    thermometer_led_all_off();
+    rt_pin_mode(BUTTON_PIN, PIN_MODE_INPUT_PULLUP);
+    rt_pin_attach_irq(BUTTON_PIN, PIN_IRQ_MODE_FALLING, thermometer_key_callback, RT_NULL);
+    rt_pin_irq_enable(BUTTON_PIN, PIN_IRQ_ENABLE);
 
-    /* Wait for UI initialization to complete */
-    if (xiaozhi_ui_wait_ready(rt_tick_from_millisecond(UI_INIT_TIMEOUT_MS)) != RT_EOK)
+    lvgl_thread_init();
+    rt_thread_mdelay(2000);
+
+    g_aht10_dev = aht10_init(PKG_AHT10_I2C_BUS_NAME);
+    if (g_aht10_dev == RT_NULL)
     {
-        LOG_W("UI initialization timeout");
+        g_thermometer_shared.sensor_ok = 0;
+        rt_kprintf("[Single Thermo] AHT20 init failed on %s\r\n", PKG_AHT10_I2C_BUS_NAME);
     }
-    rt_thread_mdelay(BSP_LCD_FIRST_FRAME_DELAY_MS);
-    m55_lcd_backlight_enable();
+    else
+    {
+        g_thermometer_shared.sensor_ok = 1;
+        rt_kprintf("[Single Thermo] AHT20 ready on %s\r\n", PKG_AHT10_I2C_BUS_NAME);
+    }
 
-    /* Initialize WiFi manager */
-    wifi_manager_init();
-#endif
-    return 0;
+    while (1)
+    {
+        static rt_uint32_t sample_elapsed = SAMPLE_PERIOD_MS;
+
+        if (!g_thermometer_shared.paused && sample_elapsed >= SAMPLE_PERIOD_MS)
+        {
+            thermometer_sample_once();
+            sample_elapsed = 0;
+        }
+
+        thermometer_led_update(g_thermometer_shared.temperature, g_thermometer_shared.humidity);
+        rt_thread_mdelay(LED_REFRESH_MS);
+        sample_elapsed += LED_REFRESH_MS;
+    }
 }

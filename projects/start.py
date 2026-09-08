@@ -17,6 +17,21 @@ class OpenOcdCmdLineConfig(pydantic_cli.Cmd):
         description="项目主目录",
     )
 
+    extraHexFileScanDirs: pathlib.Path | None = Field(
+        # default=None,
+        default=None,
+        description="额外的 hex 文件扫描目录",
+    )
+
+    @property
+    def hexFileScanDirs(self) -> list[pathlib.Path]:
+        return [
+            self.projectMainDir / "build",
+            self.projectMainDir,
+            self.projectMainDir / "Debug",
+            self.projectMainDir / "Release",
+        ] + ([self.extraHexFileScanDirs] if self.extraHexFileScanDirs else [])
+
     scripts: list[pathlib.Path] | None = None
     cfgFiles: list[pathlib.Path] | None = None
     commands: list[str] | None = None
@@ -40,12 +55,13 @@ class OpenOcdCmdLineConfig(pydantic_cli.Cmd):
             self.openOcdInstallDir / "scripts",
             self.openOcdInstallDir / "flm" / "cypress" / "cat4",
         ]
-        hexFileCandidates = [
-            self.projectMainDir / "build" / "rtthread.hex",
-            self.projectMainDir / "rtthread.hex",
-        ]
-        logging.info("hexFileCandidates: %s", hexFileCandidates)
-        hexFile = [file for file in hexFileCandidates if file.exists()][0]
+
+        logging.info("hexFileCandidates: %s", self.hexFileScanDirs)
+        hexFile = [
+            dir / "rtthread.hex"
+            for dir in self.hexFileScanDirs
+            if (dir / "rtthread.hex").exists()
+        ][0]
 
         hexStr = hexFile.relative_to(self.projectMainDir).as_posix()
 

@@ -44,3 +44,4 @@ cconfig.h
 /rt-thread
 /tools
 /resources
+/cmake-build-**/
