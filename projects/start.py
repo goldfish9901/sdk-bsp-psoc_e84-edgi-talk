@@ -17,6 +17,11 @@ class OpenOcdCmdLineConfig(pydantic_cli.Cmd):
         description="项目主目录",
     )
 
+    extraHexFileScanDir: pathlib.Path | None = Field(
+        default=None,
+        description="额外扫描的 hex 文件目录",
+    )
+
     scripts: list[pathlib.Path] | None = None
     cfgFiles: list[pathlib.Path] | None = None
     commands: list[str] | None = None
@@ -43,7 +48,11 @@ class OpenOcdCmdLineConfig(pydantic_cli.Cmd):
         hexFileCandidates = [
             self.projectMainDir / "build" / "rtthread.hex",
             self.projectMainDir / "rtthread.hex",
-        ]
+        ] + (
+            [self.extraHexFileScanDir / "rtthread.hex"]
+            if self.extraHexFileScanDir
+            else []
+        )
         logging.info("hexFileCandidates: %s", hexFileCandidates)
         hexFile = [file for file in hexFileCandidates if file.exists()][0]
 

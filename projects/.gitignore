@@ -2,3 +2,5 @@
 *.dbsqlite
 *pkgs_error.json
 *rtconfig_preinc.h
+
+**/cmake-build-**
