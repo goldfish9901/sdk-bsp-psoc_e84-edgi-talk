@@ -308,6 +308,18 @@ menu "On-chip Peripheral Drivers"
                     int "I2C1 SDA PIN number"
                     default 74
                 endif
+            config BSP_USING_SOFT_I2C2
+                bool "Enable SOFT I2C2"
+                select RT_USING_I2C_BITOPS
+                default n
+                if BSP_USING_SOFT_I2C2
+                    config BSP_SOFT_I2C2_SCL_PIN
+                    int "I2C2 SCL PIN number"
+                    default 75
+                    config BSP_SOFT_I2C2_SDA_PIN
+                    int "I2C2 SDA PIN number"
+                    default 74
+                endif
         endif
 
     menuconfig BSP_USING_UART

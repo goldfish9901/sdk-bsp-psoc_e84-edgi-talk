@@ -1,0 +1,9 @@
+from building import *
+
+cwd = GetCurrentDir()
+src = Glob('*.c')
+path = [cwd, cwd + '/../ui']
+
+group = DefineGroup('xiaozhi_temp_humi', src, depend = ['PKG_USING_AHT10'], CPPPATH = path)
+
+Return('group')

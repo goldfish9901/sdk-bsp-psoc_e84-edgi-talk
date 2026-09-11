@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <lvgl.h>
 #include "xiaozhi_ui.h"
+#include "3d_demo/sample/lv_example_virtual3d_animated_emoji.h"
 
 /*****************************************************************************
  * Macro Definitions
@@ -45,7 +46,7 @@
 #define HEADER_HEIGHT       40
 #define BATTERY_OUTLINE_W   58
 #define BATTERY_OUTLINE_H   33
-#define XIAOZHI_UI_SHOW_DEBUG_PANEL 0
+#define XIAOZHI_UI_SHOW_DEBUG_PANEL 1
 
 /*****************************************************************************
  * Type Definitions
@@ -97,7 +98,7 @@ extern void lv_port_disp_init(void);
 static struct rt_semaphore s_ui_init_sem;
 static struct rt_messagequeue s_ui_mq;
 static char s_mq_pool[UI_MSG_POOL_SIZE * sizeof(ui_msg_t)];
-
+static volatile rt_bool_t s_ui_mq_ready = RT_FALSE;   /* 消息队列就绪标志，供 xiaozhi_ui_is_ready() 查询 */
 /* Scale factor for different screen sizes */
 static float g_scale = 1.0f;
 
@@ -106,13 +107,11 @@ static lv_obj_t *s_cont = NULL;
 /* static uint8_t s_cont_status = CONT_DEFAULT_STATUS; */ /* Reserved for future use */
 /* static uint32_t s_anim_tick = 0; */                    /* Reserved for future use */
 
-/* LVGL objects - Main Screen */
-static lv_obj_t *s_label_status;    /* Status label */
-static lv_obj_t *s_label_info;      /* Info label */
-#if XIAOZHI_UI_SHOW_DEBUG_PANEL
-static lv_obj_t *s_label_adc;       /* Debug label */
-#endif
-static lv_obj_t *s_label_output;    /* Output label */
+/* LVGL 主界面对象 */
+static lv_obj_t *s_label_status;    /* 状态标签 */
+static lv_obj_t *s_label_info;      /* 信息标签 */
+static lv_obj_t *s_label_adc;       /* 温湿度标签，沿用原 ADC 标签位置 */
+static lv_obj_t *s_label_output;    /* 输出标签 */
 static lv_obj_t *s_emoji_container;
 static lv_obj_t *s_main_container;
 static lv_obj_t *s_header_row;
@@ -350,13 +349,15 @@ static rt_err_t ui_objects_init(void)
     lv_obj_set_style_text_color(s_label_info, lv_color_hex(0xffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_align(s_label_info, LV_ALIGN_BOTTOM_MID, 0, 0);
 
-#if XIAOZHI_UI_SHOW_DEBUG_PANEL
-    /* Debug label - positioned in top right */
+    /* AHT20 温湿度标签：放在右上角电量框下方。 */
     s_label_adc = lv_label_create(screen);
-    lv_obj_add_style(s_label_adc, &s_style_30, 0);
-    lv_obj_set_style_text_color(s_label_adc, lv_color_hex(0x333333), LV_PART_MAIN | LV_STATE_DEFAULT); /* Dark gray for better contrast */
-    lv_obj_align(s_label_adc, LV_ALIGN_TOP_RIGHT, -SCALE_DPX(20), SCALE_DPX(20));
-#endif
+    lv_obj_add_style(s_label_adc, &s_style_20, 0);
+    lv_label_set_text(s_label_adc, "T --.-C  H --.-%");
+    lv_label_set_long_mode(s_label_adc, LV_LABEL_LONG_CLIP);
+    lv_obj_set_width(s_label_adc, SCALE_DPX(190));
+    lv_obj_set_style_text_align(s_label_adc, LV_TEXT_ALIGN_RIGHT, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(s_label_adc, lv_color_hex(0xffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_align(s_label_adc, LV_ALIGN_TOP_RIGHT, -SCALE_DPX(36), SCALE_DPX(58));
 
     return RT_EOK;
 }
@@ -370,7 +371,10 @@ static rt_err_t ui_objects_init(void)
 static void ui_send_message(ui_cmd_t cmd, const char *data, const char *default_data)
 {
     ui_msg_t msg;
-
+    if (s_ui_mq_ready != RT_TRUE)
+    {
+        return;
+    }
     msg.cmd = cmd;
     if (data != RT_NULL)
     {
@@ -416,8 +420,8 @@ static void ui_show_emoji(int index)
 }
 
 /**
- * @brief Process UI message
- * @param msg Message to process
+ * @brief 处理 UI 消息
+ * @param msg 待处理的消息
  */
 static void ui_process_message(const ui_msg_t *msg)
 {
@@ -438,12 +442,10 @@ static void ui_process_message(const ui_msg_t *msg)
         break;
 
     case UI_CMD_SET_ADC:
-#if XIAOZHI_UI_SHOW_DEBUG_PANEL
         if (s_label_adc)
         {
             lv_label_set_text(s_label_adc, msg->data);
         }
-#endif
         break;
 
     case UI_CMD_SET_EMOJI:
@@ -582,9 +584,7 @@ static void ui_thread_entry(void *args)
     /* Set initial display */
     if (s_label_status) lv_label_set_text(s_label_status, "初始化中...");
     if (s_label_info) lv_label_set_text(s_label_info, " ");
-#if XIAOZHI_UI_SHOW_DEBUG_PANEL
     if (s_label_adc) lv_label_set_text(s_label_adc, " ");
-#endif
     if (s_label_output) lv_label_set_text(s_label_output, " ");
     ui_show_emoji(0);
     lv_task_handler();
@@ -621,7 +621,8 @@ void xiaozhi_ui_init(void)
     rt_sem_init(&s_ui_init_sem, "ui_sem", 0, RT_IPC_FLAG_PRIO);
     rt_mq_init(&s_ui_mq, "ui_mq", s_mq_pool, sizeof(ui_msg_t),
                sizeof(s_mq_pool), RT_IPC_FLAG_FIFO);
-
+    /* 必须在 rt_mq_init() 之后置位：本标志置位后其他线程才会向消息队列发消息 */
+    s_ui_mq_ready = RT_TRUE;
     /* Create UI thread */
     tid = rt_thread_create("xz_ui", ui_thread_entry, RT_NULL,
                            UI_THREAD_STACK, UI_THREAD_PRIORITY, UI_THREAD_TICK);
@@ -638,6 +639,15 @@ void xiaozhi_ui_init(void)
 rt_err_t xiaozhi_ui_wait_ready(rt_int32_t timeout)
 {
     return rt_sem_take(&s_ui_init_sem, timeout);
+}
+
+/**
+ * @brief 查询 UI 消息队列是否已就绪（非阻塞）
+ * @return 消息队列已就绪返回 RT_TRUE，否则返回 RT_FALSE
+ */
+rt_bool_t xiaozhi_ui_is_ready(void)
+{
+    return s_ui_mq_ready;
 }
 
 void xiaozhi_ui_set_status(const char *status)
@@ -657,11 +667,12 @@ void xiaozhi_ui_set_emoji(const char *emoji)
 
 void xiaozhi_ui_set_adc(const char *adc_str)
 {
-#if XIAOZHI_UI_SHOW_DEBUG_PANEL
-    ui_send_message(UI_CMD_SET_ADC, adc_str, "");
-#else
-    (void)adc_str;
-#endif
+    xiaozhi_ui_set_temp_humi(adc_str);
+}
+
+void xiaozhi_ui_set_temp_humi(const char *temp_humi_str)
+{
+    ui_send_message(UI_CMD_SET_ADC, temp_humi_str, "T --.-C  H --.-%");
 }
 
 void xiaozhi_ui_clear_info(void)
@@ -704,7 +715,7 @@ void xiaozhi_ui_update_ble_status(bool connected)
  * Legacy API Compatibility
  *****************************************************************************/
 
-/* Keep old function names for backward compatibility */
+/* 保留旧函数名，兼容原 XiaoZhi 代码 */
 void init_ui(void)
 {
     xiaozhi_ui_init();

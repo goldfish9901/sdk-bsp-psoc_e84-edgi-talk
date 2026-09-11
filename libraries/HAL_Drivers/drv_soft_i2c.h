@@ -38,6 +38,15 @@ struct ifx_soft_i2c
     }
 #endif
 
+#ifdef BSP_USING_SOFT_I2C2
+#define I2C8_BUS_CONFIG                                  \
+    {                                                    \
+        .scl = BSP_SOFT_I2C2_SCL_PIN,                    \
+        .sda = BSP_SOFT_I2C2_SDA_PIN,                    \
+        .bus_name = "i2c2",                              \
+    }
+#endif
+
 int rt_hw_i2c_init(void);
 
 #endif
