@@ -5,6 +5,12 @@ import pydantic_cli
 from pydantic import Field
 import os
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s: %(message)s",
+)
+logger = logging.getLogger(__name__)
+
 
 class OpenOcdCmdLineConfig(pydantic_cli.Cmd):
     openOcdInstallDir: pathlib.Path = Field(
@@ -45,18 +51,19 @@ class OpenOcdCmdLineConfig(pydantic_cli.Cmd):
             self.openOcdInstallDir / "scripts",
             self.openOcdInstallDir / "flm" / "cypress" / "cat4",
         ]
-        hexFileCandidates = [
-            self.projectMainDir / "build" / "rtthread.hex",
-            self.projectMainDir / "rtthread.hex",
-        ] + (
-            [self.extraHexFileScanDir / "rtthread.hex"]
-            if self.extraHexFileScanDir
-            else []
-        )
-        logging.info("hexFileCandidates: %s", hexFileCandidates)
-        hexFile = [file for file in hexFileCandidates if file.exists()][0]
+        hexFileDirCandidates = [
+            self.projectMainDir / "build",
+            self.projectMainDir,
+        ] + ([self.extraHexFileScanDir] if self.extraHexFileScanDir else [])
+        logger.info("hexFileDirCandidates: %s", hexFileDirCandidates)
+        hexFileDir = [
+            file for file in hexFileDirCandidates if (file / "rtthread.hex").exists()
+        ][0]
 
-        hexStr = hexFile.relative_to(self.projectMainDir).as_posix()
+        hexStr = (
+            hexFileDir.absolute().relative_to(self.projectMainDir.absolute())
+            / "rtthread.hex"
+        ).as_posix()
 
         commands = self.commands or [
             "set QSPI_FLASHLOADER ../flm/cypress/cat4/PSE84_SMIF.FLM",
@@ -98,13 +105,14 @@ class OpenOcdCmdLineConfig(pydantic_cli.Cmd):
         return args
 
     def run(self):
-        cmd = self.build_args()
         subprocess.run(
             ["scons", f"-j{int(os.cpu_count() * 4.0/5)}"], cwd=self.projectMainDir
         )
-        logging.info("cmd: %s", cmd)
+        cmd = self.build_args()
+        logger.info("cmd: %s", cmd)
         subprocess.run(cmd, check=True)
 
 
 if __name__ == "__main__":
     pydantic_cli.run_and_exit(OpenOcdCmdLineConfig)
+
