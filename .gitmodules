@@ -1,0 +1,6 @@
+[submodule "projects/Edgi_Talk_M55_LVGL/packages/aht10-latest"]
+	path = projects/Edgi_Talk_M55_LVGL/packages/aht10-latest
+	url = https://github.com/RT-Thread-packages/aht10.git
+[submodule "projects/projects/Edgi_Talk_M55_XiaoZhi/packages/aht10-latest"]
+	path = projects/projects/Edgi_Talk_M55_XiaoZhi/packages/aht10-latest
+	url = https://github.com/RT-Thread-packages/aht10.git
