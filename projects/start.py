@@ -106,7 +106,9 @@ class OpenOcdCmdLineConfig(pydantic_cli.Cmd):
 
     def run(self):
         subprocess.run(
-            ["scons", f"-j{int(os.cpu_count() * 4.0/5)}"], cwd=self.projectMainDir
+            ["scons", f"-j{int(os.cpu_count() * 4.0/5)}"],
+            cwd=self.projectMainDir,
+            check=True,
         )
         cmd = self.build_args()
         logger.info("cmd: %s", cmd)
@@ -115,4 +117,3 @@ class OpenOcdCmdLineConfig(pydantic_cli.Cmd):
 
 if __name__ == "__main__":
     pydantic_cli.run_and_exit(OpenOcdCmdLineConfig)
-
