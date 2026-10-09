@@ -1,7 +1,7 @@
 [
  {
-  "path": "/packages/tools/cpu_usage", 
-  "ver": "latest", 
-  "name": "CPU_USAGE"
+  "name": "CPU_USAGE",
+  "path": "/packages/tools/cpu_usage",
+  "ver": "latest"
  }
 ]
