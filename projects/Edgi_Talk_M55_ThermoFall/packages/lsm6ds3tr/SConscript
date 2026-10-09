@@ -1,0 +1,16 @@
+from building import *
+
+cwd     = GetCurrentDir()
+src     = Glob('*.c')
+CPPPATH = [cwd]
+
+# ST 的驱动寄存器层用 float_t（定义在 <math.h>）。本工具链的 newlib 4.1.0 在
+# __FLT_EVAL_METHOD__ == 16（非 0/1/2）时不 typedef float_t，而是假定由 config.h 提供，
+# 于是 lsm6ds3tr-c_reg.h 会报 "unknown type name 'float_t'"。
+# 这里显式声明求值精度为 0（无扩展精度，符合 Cortex-M55 硬浮点实际行为），
+# newlib 就会按标准给出 typedef float float_t。
+CPPDEFINES = ['FLT_EVAL_METHOD=0']
+
+group = DefineGroup('lsm6ds3tr-c', src, depend = ['BSP_USING_LSM6DS3'], CPPPATH = CPPPATH, CPPDEFINES = CPPDEFINES)
+
+Return('group')
