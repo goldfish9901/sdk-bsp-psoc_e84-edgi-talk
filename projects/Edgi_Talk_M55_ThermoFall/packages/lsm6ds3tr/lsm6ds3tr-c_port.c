@@ -24,26 +24,8 @@ volatile fallcheck_shared_t g_fallcheck_shared __attribute__((section(".m33_m55_
 
 /* 私有宏定义 ----------------------------------------------------------------*/
 #define    LSM6DS3_I2C_BUS_NAME "i2c0"
-#define FALLCHECK_SAMPLE_MS             100U
-#define FALLCHECK_LOG_DIVIDER           5U
-#define FALLCHECK_STILL_MIN_SAMPLES     4U
-#define FALLCHECK_CONFIRM_WINDOW        12U
-#define FALLCHECK_FALL_HOLD_SAMPLES     50U
-#define FALLCHECK_WARMUP_SAMPLES        10U
-#define FALLCHECK_VALID_ACC_MIN_MG      500.0f
-#define FALLCHECK_IDLE_ACC_LOW_MG       800.0f
-#define FALLCHECK_IDLE_ACC_HIGH_MG      1200.0f
-#define FALLCHECK_IDLE_GYRO_SUM_MDPS    60000.0f
-#define FALLCHECK_IMPACT_HIGH_MG        1700.0f
-#define FALLCHECK_IMPACT_LOW_MG         350.0f
-#define FALLCHECK_DROP_ACC_HIGH_MG      700.0f
-#define FALLCHECK_DROP_GYRO_SUM_MDPS    20000.0f
-#define FALLCHECK_ROTATE_SUM_MDPS       650000.0f
-#define FALLCHECK_ROTATE_WITH_IMPACT    250000.0f
-#define FALLCHECK_POSTURE_CHANGE_COS    0.5736f
-#define FALLCHECK_POSTURE_MOTION_SAMPLES 8U
-#define FALLCHECK_UPRIGHT_X_MIN_MG      850.0f
-#define FALLCHECK_UPRIGHT_SIDE_MAX_MG   250.0f
+/* 摔倒判定的调参常量统一放在 applications/exam_shared.h，
+ * 调试视图和状态机共用同一份数值。 */
 /* 私有变量 ------------------------------------------------------------------*/
 static int16_t data_raw_acceleration[3];
 static int16_t data_raw_angular_rate[3];
@@ -89,19 +71,24 @@ static rt_bool_t fallcheck_is_standard_upright(float ax, float ay, float az, flo
             gyro_sum < FALLCHECK_IDLE_GYRO_SUM_MDPS) ? RT_TRUE : RT_FALSE;
 }
 
+/*
+ * 状态机的内部计数放到文件作用域：传感器线程把它们拷进 g_fallcheck_shared，
+ * 这样 LVGL 调试视图能看到状态机到底卡在哪一步（甩板子时串口是没法看的）。
+ */
+static rt_uint8_t s_still_samples = 0;
+static rt_uint8_t s_confirm_window = 0;
+static rt_uint8_t s_fall_hold = 0;
+static rt_uint8_t s_warmup_samples = 0;
+static rt_uint8_t s_motion_samples = 0;
+static rt_uint8_t s_has_last_still = 0;
+static float s_last_still_ax = 0.0f;
+static float s_last_still_ay = 0.0f;
+static float s_last_still_az = 0.0f;
+static float s_last_still_mag2 = 0.0f;
+static rt_uint32_t s_flags = 0;
+
 static rt_uint8_t fallcheck_state_from_axes(float ax, float ay, float az, float gx, float gy, float gz)
 {
-    static rt_uint8_t still_samples = 0;
-    static rt_uint8_t confirm_window = 0;
-    static rt_uint8_t fall_hold = 0;
-    static rt_uint8_t warmup_samples = 0;
-    static rt_uint8_t motion_samples = 0;
-    static rt_uint8_t has_last_still = 0;
-    static float last_still_ax = 0.0f;
-    static float last_still_ay = 0.0f;
-    static float last_still_az = 0.0f;
-    static float last_still_mag2 = 0.0f;
-
     float acc_mag2 = ax * ax + ay * ay + az * az;
     float gyro_sum = fallcheck_absf(gx) + fallcheck_absf(gy) + fallcheck_absf(gz);
     rt_bool_t valid_acc = (acc_mag2 > (FALLCHECK_VALID_ACC_MIN_MG * FALLCHECK_VALID_ACC_MIN_MG));
@@ -118,49 +105,77 @@ static rt_uint8_t fallcheck_state_from_axes(float ax, float ay, float az, float 
     rt_bool_t standard_upright = fallcheck_is_standard_upright(ax, ay, az, gyro_sum);
     rt_bool_t posture_change = RT_FALSE;
 
-    if (warmup_samples < FALLCHECK_WARMUP_SAMPLES)
+    /* 把本拍的判据原样发布出去，调试视图按位显示 */
+    s_flags = 0;
+    if (still)
     {
-        warmup_samples++;
+        s_flags |= FALLCHECK_FLAG_STILL;
+    }
+    if (impact_high)
+    {
+        s_flags |= FALLCHECK_FLAG_IMPACT;
+    }
+    if (drop_dip)
+    {
+        s_flags |= FALLCHECK_FLAG_DROP;
+    }
+    if (fast_rotate)
+    {
+        s_flags |= FALLCHECK_FLAG_FAST_ROTATE;
+    }
+    if (impact_rotate)
+    {
+        s_flags |= FALLCHECK_FLAG_IMPACT_ROTATE;
+    }
+    if (standard_upright)
+    {
+        s_flags |= FALLCHECK_FLAG_UPRIGHT;
+    }
+
+    if (s_warmup_samples < FALLCHECK_WARMUP_SAMPLES)
+    {
+        s_warmup_samples++;
     }
 
     if (!valid_acc)
     {
-        still_samples = 0;
-        confirm_window = 0;
+        s_still_samples = 0;
+        s_confirm_window = 0;
         return FALLCHECK_STATE_NORMAL;
     }
 
     if (!still || gyro_sum > FALLCHECK_DROP_GYRO_SUM_MDPS)
     {
-        motion_samples = FALLCHECK_POSTURE_MOTION_SAMPLES;
+        s_motion_samples = FALLCHECK_POSTURE_MOTION_SAMPLES;
     }
 
     if (still)
     {
-        if (still_samples < 255U)
+        if (s_still_samples < 255U)
         {
-            still_samples++;
+            s_still_samples++;
         }
 
-        if (has_last_still && motion_samples > 0U)
+        if (s_has_last_still && s_motion_samples > 0U)
         {
-            float dot = ax * last_still_ax + ay * last_still_ay + az * last_still_az;
-            float limit2 = acc_mag2 * last_still_mag2 * FALLCHECK_POSTURE_CHANGE_COS * FALLCHECK_POSTURE_CHANGE_COS;
+            float dot = ax * s_last_still_ax + ay * s_last_still_ay + az * s_last_still_az;
+            float limit2 = acc_mag2 * s_last_still_mag2 * FALLCHECK_POSTURE_CHANGE_COS * FALLCHECK_POSTURE_CHANGE_COS;
 
             if (dot <= 0.0f || (dot * dot) < limit2)
             {
                 posture_change = RT_TRUE;
+                s_flags |= FALLCHECK_FLAG_POSTURE;
             }
         }
     }
     else
     {
-        still_samples = 0;
+        s_still_samples = 0;
     }
 
-    if (fall_hold > 0U)
+    if (s_fall_hold > 0U)
     {
-        fall_hold--;
+        s_fall_hold--;
         return FALLCHECK_STATE_FALL;
     }
 
@@ -171,31 +186,31 @@ static rt_uint8_t fallcheck_state_from_axes(float ax, float ay, float az, float 
      * 3. 候选窗口内设备很快重新静止，才确认 FALL。
      * 这样可以减少普通手摇、轻微晃动带来的误报。
      */
-    if (warmup_samples >= FALLCHECK_WARMUP_SAMPLES &&
+    if (s_warmup_samples >= FALLCHECK_WARMUP_SAMPLES &&
         (drop_dip || impact_rotate || (impact_high && fast_rotate) || posture_change))
     {
-        confirm_window = FALLCHECK_CONFIRM_WINDOW;
+        s_confirm_window = FALLCHECK_CONFIRM_WINDOW;
     }
 
-    if (confirm_window > 0U)
+    if (s_confirm_window > 0U)
     {
-        confirm_window--;
+        s_confirm_window--;
         if (still && standard_upright)
         {
-            confirm_window = 0;
-            fall_hold = 0;
-            last_still_ax = ax;
-            last_still_ay = ay;
-            last_still_az = az;
-            last_still_mag2 = acc_mag2;
-            has_last_still = 1;
-            return (still_samples >= FALLCHECK_STILL_MIN_SAMPLES) ? FALLCHECK_STATE_IDLE : FALLCHECK_STATE_NORMAL;
+            s_confirm_window = 0;
+            s_fall_hold = 0;
+            s_last_still_ax = ax;
+            s_last_still_ay = ay;
+            s_last_still_az = az;
+            s_last_still_mag2 = acc_mag2;
+            s_has_last_still = 1;
+            return (s_still_samples >= FALLCHECK_STILL_MIN_SAMPLES) ? FALLCHECK_STATE_IDLE : FALLCHECK_STATE_NORMAL;
         }
 
-        if (still_samples >= FALLCHECK_STILL_MIN_SAMPLES)
+        if (s_still_samples >= FALLCHECK_STILL_MIN_SAMPLES)
         {
-            fall_hold = FALLCHECK_FALL_HOLD_SAMPLES;
-            confirm_window = 0;
+            s_fall_hold = FALLCHECK_FALL_HOLD_SAMPLES;
+            s_confirm_window = 0;
             return FALLCHECK_STATE_FALL;
         }
         return FALLCHECK_STATE_NORMAL;
@@ -203,19 +218,19 @@ static rt_uint8_t fallcheck_state_from_axes(float ax, float ay, float az, float 
 
     if (still)
     {
-        last_still_ax = ax;
-        last_still_ay = ay;
-        last_still_az = az;
-        last_still_mag2 = acc_mag2;
-        has_last_still = 1;
+        s_last_still_ax = ax;
+        s_last_still_ay = ay;
+        s_last_still_az = az;
+        s_last_still_mag2 = acc_mag2;
+        s_has_last_still = 1;
     }
 
-    if (motion_samples > 0U)
+    if (s_motion_samples > 0U)
     {
-        motion_samples--;
+        s_motion_samples--;
     }
 
-    return (still_samples >= FALLCHECK_STILL_MIN_SAMPLES) ? FALLCHECK_STATE_IDLE : FALLCHECK_STATE_NORMAL;
+    return (s_still_samples >= FALLCHECK_STILL_MIN_SAMPLES) ? FALLCHECK_STATE_IDLE : FALLCHECK_STATE_NORMAL;
 }
 
 static void fallcheck_sensor_thread(void *parameter)
@@ -317,19 +332,40 @@ static void fallcheck_sensor_thread(void *parameter)
                                        g_fallcheck_shared.gy,
                                        g_fallcheck_shared.gz);
         g_fallcheck_shared.alarm = (g_fallcheck_shared.state == FALLCHECK_STATE_FALL && !g_fallcheck_shared.muted) ? 1 : 0;
-        g_fallcheck_shared.sequence++;
 
-        if ((g_fallcheck_shared.sequence % FALLCHECK_LOG_DIVIDER) == 0U)
+        /*
+         * 发布调试量。峰值必须在这里算：传感器线程每 100ms 一拍，
+         * 而 UI 刷新再快也可能漏掉某一拍，甩板子的冲击峰值会被错过。
+         */
+        g_fallcheck_shared.acc_mag = sqrtf(g_fallcheck_shared.ax * g_fallcheck_shared.ax +
+                                           g_fallcheck_shared.ay * g_fallcheck_shared.ay +
+                                           g_fallcheck_shared.az * g_fallcheck_shared.az);
+        g_fallcheck_shared.gyro_sum = fallcheck_absf(g_fallcheck_shared.gx) +
+                                      fallcheck_absf(g_fallcheck_shared.gy) +
+                                      fallcheck_absf(g_fallcheck_shared.gz);
+        g_fallcheck_shared.flags = s_flags;
+        g_fallcheck_shared.cnt_still = s_still_samples;
+        g_fallcheck_shared.cnt_confirm = s_confirm_window;
+        g_fallcheck_shared.cnt_hold = s_fall_hold;
+        g_fallcheck_shared.cnt_motion = s_motion_samples;
+        g_fallcheck_shared.cnt_warmup = s_warmup_samples;
+
+        if (g_fallcheck_shared.dbg_reset)
         {
-            rt_kprintf("[FallCheck] acc=%d.%02d,%d.%02d,%d.%02d gyro=%d.%02d,%d.%02d,%d.%02d state=%u mute=%u seq=%u\r\n",
-                       (int)g_fallcheck_shared.ax, (int)(fallcheck_absf(g_fallcheck_shared.ax) * 100) % 100,
-                       (int)g_fallcheck_shared.ay, (int)(fallcheck_absf(g_fallcheck_shared.ay) * 100) % 100,
-                       (int)g_fallcheck_shared.az, (int)(fallcheck_absf(g_fallcheck_shared.az) * 100) % 100,
-                       (int)g_fallcheck_shared.gx, (int)(fallcheck_absf(g_fallcheck_shared.gx) * 100) % 100,
-                       (int)g_fallcheck_shared.gy, (int)(fallcheck_absf(g_fallcheck_shared.gy) * 100) % 100,
-                       (int)g_fallcheck_shared.gz, (int)(fallcheck_absf(g_fallcheck_shared.gz) * 100) % 100,
-                       g_fallcheck_shared.state, g_fallcheck_shared.muted, g_fallcheck_shared.sequence);
+            g_fallcheck_shared.acc_mag_peak = 0.0f;
+            g_fallcheck_shared.gyro_sum_peak = 0.0f;
+            g_fallcheck_shared.dbg_reset = 0;
         }
+        if (g_fallcheck_shared.acc_mag > g_fallcheck_shared.acc_mag_peak)
+        {
+            g_fallcheck_shared.acc_mag_peak = g_fallcheck_shared.acc_mag;
+        }
+        if (g_fallcheck_shared.gyro_sum > g_fallcheck_shared.gyro_sum_peak)
+        {
+            g_fallcheck_shared.gyro_sum_peak = g_fallcheck_shared.gyro_sum;
+        }
+
+        g_fallcheck_shared.sequence++;
 
         rt_thread_mdelay(FALLCHECK_SAMPLE_MS);
     }
@@ -352,6 +388,18 @@ int lsm6ds3tr_c_read_data_sample(void)
     g_fallcheck_shared.muted = 0;
     g_fallcheck_shared.sensor_ok = 0;
     g_fallcheck_shared.sequence = 0;
+    /* g_fallcheck_shared 位于 NOLOAD 的共享内存区，C 初值会被丢弃，这里逐字段显式初始化 */
+    g_fallcheck_shared.acc_mag = 0.0f;
+    g_fallcheck_shared.gyro_sum = 0.0f;
+    g_fallcheck_shared.acc_mag_peak = 0.0f;
+    g_fallcheck_shared.gyro_sum_peak = 0.0f;
+    g_fallcheck_shared.flags = 0;
+    g_fallcheck_shared.cnt_still = 0;
+    g_fallcheck_shared.cnt_confirm = 0;
+    g_fallcheck_shared.cnt_hold = 0;
+    g_fallcheck_shared.cnt_motion = 0;
+    g_fallcheck_shared.cnt_warmup = 0;
+    g_fallcheck_shared.dbg_reset = 0;
 
     tid = rt_thread_create("fall_sns", fallcheck_sensor_thread, RT_NULL, 2048, 20, 20);
     if (tid == RT_NULL)

@@ -21,6 +21,24 @@ static lv_obj_t *s_fall_detail_label;
 static lv_obj_t *s_fall_seq_label;
 static lv_obj_t *s_fall_state_bar;
 
+/*
+ * 调试覆盖层：摔倒检测要靠猛烈甩动开发板来验证，串口根本看不了，
+ * 所以把状态机的判据原样搬到屏幕上，并做峰值保持（甩完再看也来得及）。
+ */
+static rt_bool_t s_dbg_enabled = RT_FALSE;
+static lv_obj_t *s_dbg_btn;
+static lv_obj_t *s_dbg_btn_label;
+static lv_obj_t *s_debug_panel;
+static lv_obj_t *s_dbg_acc_label;
+static lv_obj_t *s_dbg_gyro_label;
+static lv_obj_t *s_dbg_thr_label;
+static lv_obj_t *s_dbg_cnt_label;
+static lv_obj_t *s_dbg_flag_label;
+static lv_obj_t *s_dbg_state_label;
+
+/* 提前声明：ui_timer_cb 定义在 ui_dbg_update 之前，避免被隐式声明成非 static */
+static void ui_dbg_update(void);
+
 static lv_style_t s_style_bg;
 static lv_style_t s_style_card;
 static lv_style_t s_style_temp_card;
@@ -203,6 +221,7 @@ static void ui_apply_page(void)
     {
         lv_obj_add_flag(s_thermo_panel, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(s_fall_panel, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(s_dbg_btn, LV_OBJ_FLAG_HIDDEN);
         lv_label_set_text(s_title_label, "ThermoFall - FallCheck");
         lv_label_set_text(s_switch_label, "Thermo");
     }
@@ -210,8 +229,20 @@ static void ui_apply_page(void)
     {
         lv_obj_clear_flag(s_thermo_panel, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(s_fall_panel, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(s_dbg_btn, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(s_debug_panel, LV_OBJ_FLAG_HIDDEN);
         lv_label_set_text(s_title_label, "ThermoFall - Thermo");
         lv_label_set_text(s_switch_label, "Fall");
+    }
+
+    /* 调试层只在 Fall 页面 + 已开启时才可见 */
+    if (g_thermofall_page == THERMOFALL_PAGE_FALL && s_dbg_enabled)
+    {
+        lv_obj_clear_flag(s_debug_panel, LV_OBJ_FLAG_HIDDEN);
+    }
+    else
+    {
+        lv_obj_add_flag(s_debug_panel, LV_OBJ_FLAG_HIDDEN);
     }
 }
 
@@ -280,6 +311,12 @@ static void ui_timer_cb(lv_timer_t *timer)
     lv_snprintf(buf, sizeof(buf), "sample: %u", fall->sequence);
     lv_label_set_text(s_fall_seq_label, buf);
     ui_set_fall_state_color(fall->state);
+
+    /* 调试层只在开启时刷新，关掉时不浪费 10Hz 的字符串格式化开销 */
+    if (s_dbg_enabled && g_thermofall_page == THERMOFALL_PAGE_FALL)
+    {
+        ui_dbg_update();
+    }
 }
 
 static void ui_switch_cb(lv_event_t *e)
@@ -497,6 +534,181 @@ static void ui_create_fall_panel(lv_obj_t *scr)
     lv_obj_align(s_fall_seq_label, LV_ALIGN_TOP_LEFT, 30, 268);
 }
 
+static void ui_dbg_toggle_cb(lv_event_t *e)
+{
+    (void)e;
+
+    s_dbg_enabled = s_dbg_enabled ? RT_FALSE : RT_TRUE;
+
+    /* 进入调试视图时清零峰值，这样读到的峰值就是这一次甩板的 */
+    if (s_dbg_enabled)
+    {
+        g_fallcheck_shared.dbg_reset = 1;
+    }
+
+    lv_label_set_text(s_dbg_btn_label, s_dbg_enabled ? "HIDE" : "DBG");
+    ui_apply_page();
+}
+
+static void ui_dbg_flags_text(char *out, int len, rt_uint32_t flags, lv_color_t *color)
+{
+    lv_snprintf(out, len, "%s%s%s%s%s%s%s",
+                (flags & FALLCHECK_FLAG_IMPACT) ? "IMPACT " : "",
+                (flags & FALLCHECK_FLAG_DROP) ? "DROP " : "",
+                (flags & FALLCHECK_FLAG_FAST_ROTATE) ? "ROTATE " : "",
+                (flags & FALLCHECK_FLAG_IMPACT_ROTATE) ? "IMP_ROT " : "",
+                (flags & FALLCHECK_FLAG_POSTURE) ? "POSTURE " : "",
+                (flags & FALLCHECK_FLAG_UPRIGHT) ? "UPRIGHT " : "",
+                (flags & FALLCHECK_FLAG_STILL) ? "STILL" : "");
+
+    if (out[0] == '\0')
+    {
+        lv_snprintf(out, len, "-");
+        *color = lv_color_hex(0x8FA3B0);
+        return;
+    }
+
+    /* 会触发候选窗口的判据标红；只是安静/直立用绿色，说明不会误判 */
+    if (flags & (FALLCHECK_FLAG_IMPACT | FALLCHECK_FLAG_DROP |
+                 FALLCHECK_FLAG_FAST_ROTATE | FALLCHECK_FLAG_IMPACT_ROTATE |
+                 FALLCHECK_FLAG_POSTURE))
+    {
+        *color = lv_color_hex(0xFF4D4D);
+    }
+    else
+    {
+        *color = lv_color_hex(0x5DDB8C);
+    }
+}
+
+static void ui_dbg_update(void)
+{
+    const volatile fallcheck_shared_t *fall = &g_fallcheck_shared;
+    char buf[80];
+    lv_color_t color;
+
+    if (fall->magic != FALLCHECK_SHARED_MAGIC || !fall->sensor_ok)
+    {
+        lv_label_set_text(s_dbg_acc_label, "ACC  |a|      -- mg     peak      -- mg");
+        lv_label_set_text(s_dbg_gyro_label, "GYRO sum     -- mdps   peak      -- mdps");
+        lv_label_set_text(s_dbg_cnt_label, "still=-  conf=-  hold=-  motion=-  warm=-");
+        lv_label_set_text(s_dbg_flag_label, "waiting for LSM6DS3 ...");
+        lv_obj_set_style_text_color(s_dbg_flag_label, lv_color_hex(0x8FA3B0), 0);
+        lv_label_set_text(s_dbg_state_label, "IDLE   seq=0");
+        return;
+    }
+
+    lv_snprintf(buf, sizeof(buf), "ACC  |a|  %6d mg   peak %6d mg",
+                (int)fall->acc_mag, (int)fall->acc_mag_peak);
+    lv_label_set_text(s_dbg_acc_label, buf);
+    /* 颜色直接由状态机发布的判据决定，界面里不再重复算一遍阈值 */
+    if (fall->flags & FALLCHECK_FLAG_IMPACT)
+    {
+        lv_obj_set_style_text_color(s_dbg_acc_label, lv_color_hex(0xFF4D4D), 0);
+    }
+    else if (fall->flags & FALLCHECK_FLAG_DROP)
+    {
+        lv_obj_set_style_text_color(s_dbg_acc_label, lv_color_hex(0xFFA640), 0);
+    }
+    else
+    {
+        lv_obj_set_style_text_color(s_dbg_acc_label, lv_color_white(), 0);
+    }
+
+    lv_snprintf(buf, sizeof(buf), "GYRO sum %7d    peak %7d",
+                (int)fall->gyro_sum, (int)fall->gyro_sum_peak);
+    lv_label_set_text(s_dbg_gyro_label, buf);
+    if (fall->flags & (FALLCHECK_FLAG_FAST_ROTATE | FALLCHECK_FLAG_IMPACT_ROTATE))
+    {
+        lv_obj_set_style_text_color(s_dbg_gyro_label, lv_color_hex(0xFF4D4D), 0);
+    }
+    else
+    {
+        lv_obj_set_style_text_color(s_dbg_gyro_label, lv_color_white(), 0);
+    }
+
+    lv_snprintf(buf, sizeof(buf), "still=%u  conf=%u  hold=%u  motion=%u  warm=%u",
+                fall->cnt_still, fall->cnt_confirm,
+                fall->cnt_hold, fall->cnt_motion, fall->cnt_warmup);
+    lv_label_set_text(s_dbg_cnt_label, buf);
+
+    ui_dbg_flags_text(buf, sizeof(buf), fall->flags, &color);
+    lv_label_set_text(s_dbg_flag_label, buf);
+    lv_obj_set_style_text_color(s_dbg_flag_label, color, 0);
+
+    lv_snprintf(buf, sizeof(buf), "%s   mute=%u   seq=%u",
+                ui_fall_state_text(fall->state), fall->muted, fall->sequence);
+    lv_label_set_text(s_dbg_state_label, buf);
+}
+
+static void ui_create_debug_panel(lv_obj_t *scr)
+{
+    lv_obj_t *title;
+
+    /*
+     * 只盖住下半屏：顶部留给页面切换和 DBG 按钮，否则调试层会把按钮挡住，
+     * 就没法再点回普通视图了。
+     */
+    s_debug_panel = lv_obj_create(scr);
+    lv_obj_set_size(s_debug_panel, lv_pct(100), 216);
+    lv_obj_align(s_debug_panel, LV_ALIGN_BOTTOM_LEFT, 0, 0);
+    lv_obj_set_style_bg_color(s_debug_panel, lv_color_hex(0x101820), 0);
+    lv_obj_set_style_bg_opa(s_debug_panel, LV_OPA_COVER, 0);
+    lv_obj_set_style_border_width(s_debug_panel, 0, 0);
+    lv_obj_set_style_pad_all(s_debug_panel, 0, 0);
+    lv_obj_set_style_radius(s_debug_panel, 0, 0);
+    lv_obj_clear_flag(s_debug_panel, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
+
+    title = lv_label_create(s_debug_panel);
+    lv_label_set_text(title, "FALL DEBUG - shake the board, peaks are held");
+    lv_obj_set_style_text_color(title, lv_color_hex(0x8FA3B0), 0);
+    lv_obj_set_style_text_font(title, &lv_font_montserrat_16, 0);
+    lv_obj_align(title, LV_ALIGN_TOP_LEFT, 16, 4);
+
+    s_dbg_acc_label = lv_label_create(s_debug_panel);
+    lv_label_set_text(s_dbg_acc_label, "ACC  |a|      -- mg     peak      -- mg");
+    lv_obj_set_style_text_color(s_dbg_acc_label, lv_color_white(), 0);
+    lv_obj_set_style_text_font(s_dbg_acc_label, &lv_font_montserrat_16, 0);
+    lv_obj_align(s_dbg_acc_label, LV_ALIGN_TOP_LEFT, 16, 30);
+
+    s_dbg_gyro_label = lv_label_create(s_debug_panel);
+    lv_label_set_text(s_dbg_gyro_label, "GYRO sum     -- mdps   peak      -- mdps");
+    lv_obj_set_style_text_color(s_dbg_gyro_label, lv_color_white(), 0);
+    lv_obj_set_style_text_font(s_dbg_gyro_label, &lv_font_montserrat_16, 0);
+    lv_obj_align(s_dbg_gyro_label, LV_ALIGN_TOP_LEFT, 16, 56);
+
+    /* 阈值直接引用 exam_shared.h 的同一份常量，避免界面里另抄一份 */
+    s_dbg_thr_label = lv_label_create(s_debug_panel);
+    lv_label_set_text_fmt(s_dbg_thr_label,
+                          "still %d~%d | impact>%d | drop %d~%d | rot>%d | imp_rot>%d",
+                          (int)FALLCHECK_IDLE_ACC_LOW_MG, (int)FALLCHECK_IDLE_ACC_HIGH_MG,
+                          (int)FALLCHECK_IMPACT_HIGH_MG, (int)FALLCHECK_IMPACT_LOW_MG,
+                          (int)FALLCHECK_DROP_ACC_HIGH_MG,
+                          (int)(FALLCHECK_ROTATE_SUM_MDPS / 1000),
+                          (int)(FALLCHECK_ROTATE_WITH_IMPACT / 1000));
+    lv_obj_set_style_text_color(s_dbg_thr_label, lv_color_hex(0x6E8494), 0);
+    lv_obj_set_style_text_font(s_dbg_thr_label, &lv_font_montserrat_16, 0);
+    lv_obj_align(s_dbg_thr_label, LV_ALIGN_TOP_LEFT, 16, 82);
+
+    s_dbg_cnt_label = lv_label_create(s_debug_panel);
+    lv_label_set_text(s_dbg_cnt_label, "still=-  conf=-  hold=-  motion=-  warm=-");
+    lv_obj_set_style_text_color(s_dbg_cnt_label, lv_color_hex(0xC8D6E0), 0);
+    lv_obj_set_style_text_font(s_dbg_cnt_label, &lv_font_montserrat_16, 0);
+    lv_obj_align(s_dbg_cnt_label, LV_ALIGN_TOP_LEFT, 16, 108);
+
+    s_dbg_flag_label = lv_label_create(s_debug_panel);
+    lv_label_set_text(s_dbg_flag_label, "-");
+    lv_obj_set_style_text_color(s_dbg_flag_label, lv_color_hex(0x8FA3B0), 0);
+    lv_obj_set_style_text_font(s_dbg_flag_label, &lv_font_montserrat_16, 0);
+    lv_obj_align(s_dbg_flag_label, LV_ALIGN_TOP_LEFT, 16, 134);
+
+    s_dbg_state_label = lv_label_create(s_debug_panel);
+    lv_label_set_text(s_dbg_state_label, "IDLE   seq=0");
+    lv_obj_set_style_text_color(s_dbg_state_label, lv_color_hex(0x5DDB8C), 0);
+    lv_obj_set_style_text_font(s_dbg_state_label, &lv_font_montserrat_16, 0);
+    lv_obj_align(s_dbg_state_label, LV_ALIGN_TOP_LEFT, 16, 162);
+}
+
 void ui_thermofall_init(void)
 {
     lv_obj_t *scr = lv_scr_act();
@@ -519,9 +731,21 @@ void ui_thermofall_init(void)
     lv_label_set_text(s_switch_label, "Fall");
     lv_obj_center(s_switch_label);
 
+    /* 调试视图开关，放在切换按钮左边，仅在 Fall 页面显示 */
+    s_dbg_btn = lv_button_create(scr);
+    lv_obj_set_size(s_dbg_btn, 62, 42);
+    lv_obj_align_to(s_dbg_btn, switch_btn, LV_ALIGN_OUT_LEFT_MID, -8, 0);
+    lv_obj_add_event_cb(s_dbg_btn, ui_dbg_toggle_cb, LV_EVENT_CLICKED, RT_NULL);
+
+    s_dbg_btn_label = lv_label_create(s_dbg_btn);
+    lv_label_set_text(s_dbg_btn_label, "DBG");
+    lv_obj_center(s_dbg_btn_label);
+
     ui_create_thermo_panel(scr);
     ui_create_fall_panel(scr);
+    ui_create_debug_panel(scr);
     ui_apply_page();
 
-    lv_timer_create(ui_timer_cb, 500, RT_NULL);
+    /* 100ms 与传感器采样周期一致，否则摔倒过程会被整拍跳过 */
+    lv_timer_create(ui_timer_cb, 100, RT_NULL);
 }

@@ -21,6 +21,8 @@ scons -j12
 - Thermo 页面：显示 AHT20 温度、湿度、舒适度和采样计数。
 - FallCheck 页面：显示 LSM6DS3 ACC、GYR、`IDLE/MOVING/FALL` 状态。
 - 触摸按钮切换页面。
+- FallCheck 页面右上角 `DBG` 按钮展开调试覆盖层：显示加速度幅值、陀螺仪三轴和、
+  峰值保持、状态机计数器与判据（带颜色）。摔板子验证时看屏幕，不看串口。
 - KEY 跟随当前页面执行暂停或静音。
 - LED 跟随当前页面任务显示。
 - FallCheck 页面确认 FALL 且未静音时播放 `/webnet/beep.wav`。
