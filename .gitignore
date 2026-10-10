@@ -39,3 +39,6 @@ settings/
 *.uvguix*
 cconfig.h
 *.asm
+projects/.metadata/
+projects/Edgi_Talk_M55_ThermoFall/
+packages/
