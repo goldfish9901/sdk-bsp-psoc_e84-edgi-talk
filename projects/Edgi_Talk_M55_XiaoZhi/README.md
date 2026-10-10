@@ -144,3 +144,9 @@ libs/TARGET_APP_KIT_PSE84_EVAL_EPC2/config/design.modus
 RT-Thread Settings --> Hardware --> select SOC Multi Core Mode --> Enable CM55 Core
 ```
 ![config](figures/config.png)
+
+### USB console
+
+Logs and the `msh` shell use the board's **USB Type-C (USB OTG)** connector as `usb-acm0`. Use DAP to flash/debug, then connect a USB data cable to the USB connector and open the new virtual COM port with DTR enabled (115200, 8N1). Press Enter for `msh`. CDC baud rate does not control USB transfer speed.
+
+Boot does not wait for a USB connection. The 8 KB transmit queue retains early logs; new bytes are dropped when full. In menuconfig keep `BSP_XIAOZHI_USB_CONSOLE=y`, console name `usb-acm0`, Device CDC ACM role, and device template **None**, since the project provides the console implementation.

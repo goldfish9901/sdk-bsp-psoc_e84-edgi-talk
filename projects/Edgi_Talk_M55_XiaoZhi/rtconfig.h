@@ -51,7 +51,7 @@
 #define RT_USING_DEVICE
 #define RT_USING_CONSOLE
 #define RT_CONSOLEBUF_SIZE 1024
-#define RT_CONSOLE_DEVICE_NAME "uart2"
+#define RT_CONSOLE_DEVICE_NAME "usb-acm0"
 /* end of Kernel Device Object */
 #define RT_VER_NUM 0x50002
 /* end of RT-Thread Kernel */
@@ -554,6 +554,7 @@
 
 /* Onboard Peripheral Drivers */
 
+#define BSP_USING_USB
 #define BSP_USING_USB_TO_UART
 #define BSP_USING_AUDIO
 #define BSP_USING_AUDIO_PLAY
@@ -646,5 +647,14 @@
 #define RT_WHD_LOG_LEVEL_ERROR
 /* end of Board extended module Drivers */
 /* end of Hardware Drivers Config */
+
+#define RT_USING_CHERRYUSB
+#define RT_CHERRYUSB_DEVICE
+#define RT_CHERRYUSB_DEVICE_SPEED_HS
+#define RT_CHERRYUSB_DEVICE_DWC2_INFINEON
+#define RT_CHERRYUSB_DEVICE_CDC_ACM
+#define RT_CHERRYUSB_DEVICE_TEMPLATE_NONE
+#define BSP_USB_ROLE_DEVICE_CDC_ACM
+#define BSP_XIAOZHI_USB_CONSOLE
 
 #endif

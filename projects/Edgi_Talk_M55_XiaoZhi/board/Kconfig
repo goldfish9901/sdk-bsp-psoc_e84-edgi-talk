@@ -31,3 +31,18 @@ menu "Xiaozhi Configuration Options"
         endif
 
 endmenu
+
+config BSP_XIAOZHI_USB_CONSOLE
+    bool "Use USB Type-C CDC ACM for console"
+    default y
+    select BSP_USING_USB
+    select RT_CHERRYUSB_DEVICE
+    select RT_CHERRYUSB_DEVICE_CDC_ACM
+    help
+        Use the project USB CDC console with the device template set to None.
+        Set RT_CONSOLE_DEVICE_NAME to "usb-acm0".
+
+# Prefer the project console over the SDK throughput-test template on regeneration.
+choice CHERRYUSB_DEVICE_TEMPLATE
+    default RT_CHERRYUSB_DEVICE_TEMPLATE_NONE if BSP_XIAOZHI_USB_CONSOLE
+endchoice

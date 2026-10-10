@@ -144,3 +144,17 @@ RT-Thread Settings --> 硬件 --> select SOC Multi Core Mode --> Enable CM55 Cor
 ```
 
 ![config](figures/config.png)
+
+### USB 控制台
+
+本工程日志和 `msh` 控制台使用板上的 **USB Type-C（USB OTG）口**，设备名为 `usb-acm0`。DAP 口继续用于下载和调试。
+
+1. 编译并通过 DAP 烧录 M55 固件，复位开发板。
+2. 使用支持数据传输的 USB 线将 **USB 口**连接电脑，在设备管理器选择新增的虚拟 COM 口。
+3. 串口终端使用 115200、8N1，开启 DTR（通常打开端口时自动开启），按回车进入 `msh`。
+
+USB CDC 的波特率设置不改变实际 USB 传输速率。固件不等待 USB 连接；发送缓冲区为 8 KB，缓冲区满时丢弃新增日志。USB 初始化之前的日志也会进入缓冲区。
+
+重新运行 menuconfig 时，保持 `BSP_XIAOZHI_USB_CONSOLE=y`、`RT_CONSOLE_DEVICE_NAME="usb-acm0"`，USB 角色选择 Device CDC ACM，设备模板选择 **None**（项目提供控制台实现）。不要启用 SDK 的 CDC 测速模板或 CDC chardev 模板。
+
+参考：[Edgi Talk M55 USB RoleSwitch 官方示例](https://rt-thread-studio.github.io/sdk-bsp-psoc_e84-edgi-talk/latest/usb/Edgi_Talk_CherryUSB/Edgi_Talk_M55_USB_RoleSwitch/README_zh.html)。
