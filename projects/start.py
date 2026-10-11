@@ -51,19 +51,16 @@ class OpenOcdCmdLineConfig(pydantic_cli.Cmd):
             self.openOcdInstallDir / "scripts",
             self.openOcdInstallDir / "flm" / "cypress" / "cat4",
         ]
-        hexFileDirCandidates = [
-            self.projectMainDir / "build",
-            self.projectMainDir,
-        ] + ([self.extraHexFileScanDir] if self.extraHexFileScanDir else [])
-        logger.info("hexFileDirCandidates: %s", hexFileDirCandidates)
-        hexFileDir = [
-            file for file in hexFileDirCandidates if (file / "rtthread.hex").exists()
-        ][0]
 
-        hexStr = (
-            hexFileDir.absolute().relative_to(self.projectMainDir.absolute())
-            / "rtthread.hex"
-        ).as_posix()
+
+        hexFile = list(self.projectMainDir.rglob("*.hex"))
+        if not hexFile:
+            raise FileNotFoundError(
+                f"hex file not found in {self.projectMainDir}"
+            )
+        logging.info("hexFile: %s", hexFile)
+
+        hexStr = hexFile[0].relative_to(self.projectMainDir).as_posix()
 
         commands = self.commands or [
             "set QSPI_FLASHLOADER ../flm/cypress/cat4/PSE84_SMIF.FLM",
@@ -112,7 +109,7 @@ class OpenOcdCmdLineConfig(pydantic_cli.Cmd):
         )
         cmd = self.build_args()
         logger.info("cmd: %s", cmd)
-        subprocess.run(cmd, check=True)
+        subprocess.run(cmd, check=True, cwd=self.projectMainDir)
 
 
 if __name__ == "__main__":
