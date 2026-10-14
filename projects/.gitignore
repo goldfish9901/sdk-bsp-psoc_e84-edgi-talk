@@ -6,3 +6,5 @@
 **/cmake-build-**
 /.metadata/
 
+.metadata
+audit-output/
