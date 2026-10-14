@@ -53,14 +53,54 @@ class OpenOcdCmdLineConfig(pydantic_cli.Cmd):
         ]
 
 
-        hexFile = list(self.projectMainDir.rglob("*.hex"))
-        if not hexFile:
-            raise FileNotFoundError(
-                f"hex file not found in {self.projectMainDir}"
-            )
-        logging.info("hexFile: %s", hexFile)
+        flashTarget = self.projectMainDir / ".flash-target"
+        if flashTarget.exists() or flashTarget.is_symlink():
+            if not flashTarget.is_file():
+                raise ValueError(f"flash target manifest must be a file: {flashTarget}")
+            targetLines = flashTarget.read_text(encoding="utf-8").splitlines()
+            if len(targetLines) != 1 or not targetLines[0].strip():
+                raise ValueError(
+                    f"{flashTarget} must contain exactly one relative HEX path"
+                )
 
-        hexStr = hexFile[0].relative_to(self.projectMainDir).as_posix()
+            targetText = targetLines[0].strip()
+            targetPath = pathlib.Path(targetText)
+            windowsTarget = pathlib.PureWindowsPath(targetText)
+            if (
+                targetPath.is_absolute()
+                or windowsTarget.root
+                or windowsTarget.drive
+                # The existing OpenOCD command embeds the path as an unquoted Tcl word.
+                or any(char.isspace() or char in '{}[];$`#":\x00' for char in targetText)
+            ):
+                raise ValueError(f"invalid flash target path: {targetText!r}")
+
+            projectRoot = self.projectMainDir.resolve()
+            resolvedTarget = (projectRoot / targetPath).resolve(strict=True)
+            try:
+                targetRelative = resolvedTarget.relative_to(projectRoot)
+            except ValueError as exc:
+                raise ValueError(
+                    f"flash target must stay inside project root: {targetText!r}"
+                ) from exc
+            if not resolvedTarget.is_file() or resolvedTarget.suffix.lower() != ".hex":
+                raise ValueError(
+                    f"flash target must be an existing HEX file: {targetText!r}"
+                )
+            hexFile = [resolvedTarget]
+            hexStr = targetRelative.as_posix()
+            # A symlink can resolve to a name different from the manifest's text.
+            if any(char.isspace() or char in '{}[];$`#":\\\x00' for char in hexStr):
+                raise ValueError(f"invalid resolved flash target path: {hexStr!r}")
+        else:
+            # Preserve the existing search and its ordering when no manifest exists.
+            hexFile = list(self.projectMainDir.rglob("*.hex"))
+            if not hexFile:
+                raise FileNotFoundError(
+                    f"hex file not found in {self.projectMainDir}"
+                )
+            hexStr = hexFile[0].relative_to(self.projectMainDir).as_posix()
+        logging.info("hexFile: %s", hexFile)
 
         commands = self.commands or [
             "set QSPI_FLASHLOADER ../flm/cypress/cat4/PSE84_SMIF.FLM",
