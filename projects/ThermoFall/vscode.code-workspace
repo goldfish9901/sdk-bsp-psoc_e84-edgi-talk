@@ -1,0 +1,419 @@
+{
+    "folders": [
+        {
+            "path": "."
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\env_support\\rt-thread",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/env_support/rt-thread"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\core",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/core"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\display",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/display"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\draw",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/draw"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\draw\\sdl",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/draw/sdl"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\draw\\sw",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/draw/sw"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\draw\\sw\\blend",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/draw/sw/blend"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\draw\\vg_lite",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/draw/vg_lite"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\drivers\\display\\drm",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/drivers/display/drm"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\drivers\\display\\fb",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/drivers/display/fb"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\drivers\\display\\ili9341",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/drivers/display/ili9341"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\drivers\\display\\lcd",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/drivers/display/lcd"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\drivers\\display\\renesas_glcdc",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/drivers/display/renesas_glcdc"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\drivers\\display\\st7735",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/drivers/display/st7735"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\drivers\\display\\st7789",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/drivers/display/st7789"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\drivers\\display\\st7796",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/drivers/display/st7796"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\drivers\\evdev",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/drivers/evdev"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\drivers\\glfw",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/drivers/glfw"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\drivers\\libinput",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/drivers/libinput"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\drivers\\nuttx",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/drivers/nuttx"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\drivers\\qnx",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/drivers/qnx"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\drivers\\sdl",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/drivers/sdl"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\drivers\\wayland",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/drivers/wayland"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\drivers\\windows",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/drivers/windows"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\drivers\\x11",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/drivers/x11"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\font",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/font"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\indev",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/indev"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\layouts",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/layouts"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\layouts\\flex",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/layouts/flex"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\layouts\\grid",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/layouts/grid"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\libs\\barcode",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/libs/barcode"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\libs\\bin_decoder",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/libs/bin_decoder"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\libs\\bmp",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/libs/bmp"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\libs\\ffmpeg",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/libs/ffmpeg"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\libs\\freetype",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/libs/freetype"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\libs\\fsdrv",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/libs/fsdrv"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\libs\\gif",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/libs/gif"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\libs\\libjpeg_turbo",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/libs/libjpeg_turbo"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\libs\\libpng",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/libs/libpng"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\libs\\lodepng",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/libs/lodepng"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\libs\\lz4",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/libs/lz4"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\libs\\qrcode",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/libs/qrcode"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\libs\\rle",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/libs/rle"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\libs\\rlottie",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/libs/rlottie"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\libs\\tiny_ttf",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/libs/tiny_ttf"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\libs\\tjpgd",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/libs/tjpgd"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\misc",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/misc"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\misc\\cache",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/misc/cache"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\osal",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/osal"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\others\\file_explorer",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/others/file_explorer"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\others\\fragment",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/others/fragment"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\others\\gridnav",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/others/gridnav"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\others\\ime",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/others/ime"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\others\\imgfont",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/others/imgfont"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\others\\monkey",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/others/monkey"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\others\\observer",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/others/observer"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\others\\snapshot",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/others/snapshot"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\others\\sysmon",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/others/sysmon"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\stdlib",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/stdlib"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\stdlib\\builtin",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/stdlib/builtin"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\stdlib\\clib",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/stdlib/clib"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\stdlib\\micropython",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/stdlib/micropython"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\stdlib\\rtthread",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/stdlib/rtthread"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\themes",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/themes"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\themes\\default",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/themes/default"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\themes\\mono",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/themes/mono"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\themes\\simple",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/themes/simple"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\tick",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/tick"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\widgets\\animimage",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/widgets/animimage"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\widgets\\arc",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/widgets/arc"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\widgets\\bar",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/widgets/bar"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\widgets\\button",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/widgets/button"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\widgets\\buttonmatrix",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/widgets/buttonmatrix"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\widgets\\calendar",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/widgets/calendar"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\widgets\\canvas",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/widgets/canvas"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\widgets\\chart",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/widgets/chart"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\widgets\\checkbox",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/widgets/checkbox"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\widgets\\dropdown",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/widgets/dropdown"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\widgets\\image",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/widgets/image"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\widgets\\imagebutton",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/widgets/imagebutton"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\widgets\\keyboard",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/widgets/keyboard"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\widgets\\label",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/widgets/label"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\widgets\\led",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/widgets/led"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\widgets\\line",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/widgets/line"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\widgets\\list",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/widgets/list"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\widgets\\lottie",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/widgets/lottie"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\widgets\\menu",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/widgets/menu"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\widgets\\msgbox",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/widgets/msgbox"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\widgets\\objx_templ",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/widgets/objx_templ"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\widgets\\property",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/widgets/property"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\widgets\\roller",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/widgets/roller"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\widgets\\scale",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/widgets/scale"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\widgets\\slider",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/widgets/slider"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\widgets\\span",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/widgets/span"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\widgets\\spinbox",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/widgets/spinbox"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\widgets\\spinner",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/widgets/spinner"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\widgets\\switch",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/widgets/switch"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\widgets\\table",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/widgets/table"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\widgets\\tabview",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/widgets/tabview"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\widgets\\textarea",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/widgets/textarea"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\widgets\\tileview",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/widgets/tileview"
+        },
+        {
+            "path": "..\\..\\libraries\\components\\lvgl_9.2.0\\src\\widgets\\win",
+            "name": "rtthread/libraries/components/lvgl_9.2.0/src/widgets/win"
+        }
+    ]
+}
