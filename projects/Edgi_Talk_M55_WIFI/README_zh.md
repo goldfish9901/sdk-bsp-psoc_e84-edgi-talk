@@ -4,6 +4,28 @@
 
 ## 简介
 
+### 本分支当前配置与 Env 复现
+
+当前 `rtconfig.h` 已选择 **`WHD_RESOURCES_IN_MEMORY`**。固件、CLM 和 NVRAM 随应用编入
+`rtthread.hex`，无需再执行 FAL 的三次 `whd_res_download`。下文 FAL/SD 卡步骤仅适用于
+主动切回对应资源模式的配置。
+
+按 [公共构建说明](../README.md) 初始化 Env，在本工程目录执行：
+
+```bat
+mklinks.bat
+scons -j12
+```
+
+已有联接不必重建。SCons 输出为根目录 `rt-thread.elf`、`rtthread.hex`、`rtthread.map`，
+Studio 则使用 `Debug/`。构建产物沿用已有忽略规则；`.flash-target` 如需使用，应写
+`rtthread.hex`。源码和配置保留，当前 README 的资源模式以本节为准。
+
+`resources/55500A1.trxcse`、`55500A1.clm_blob`、`cyw55513modpse84som_rev3.txt`
+必须在构建前存在；它们是上游 SDK 的芯片固件、法规表和板级参数，Env 不能生成。
+本次不改变这些已有文件的跟踪方式。缺失时，从同版完整上游 SDK 的根目录
+`resources/` 复制这三个文件到本工程 `resources/`，不要混用其他芯片/模组版本。
+
 本示例工程基于 **Edgi-Talk 平台**，演示 **WIFI功能**，运行在 **RT-Thread 实时操作系统 (M55 核)** 上。
 通过本工程，用户可以快速体验 WIFI的联网功能，并验证WIFI模块的接口，为后续WIFI的开发提供参考。
 
@@ -36,9 +58,9 @@
 
 ### 准备 Wi-Fi 资源
 
-WHD 启动 Wi-Fi 前需要三个资源文件：固件、CLM 射频法规表和板级 NVRAM。当前文档默认介绍 FAL 分区方式，即 Wi-Fi 资源独立保存到 `whd_firmware`、`whd_clm`、`whd_nvram` 分区中。该方式下，烧录 `Debug/rtthread.hex` 只会写入应用镜像，Wi-Fi 资源需要通过串口命令单独写入。Edgi-Talk 默认提供的资源文件位于工程根目录的 `resources/` 文件夹中。
+WHD 启动 Wi-Fi 前需要三个资源文件：固件、CLM 射频法规表和板级 NVRAM。当前分支默认将资源编入应用。以下 FAL 方式供切换配置时参考：Wi-Fi 资源独立保存到 `whd_firmware`、`whd_clm`、`whd_nvram` 分区中；此时只烧录应用镜像不会写入这些资源，需要通过串口单独下载。
 
-#### 当前方式：FAL 分区加载
+#### 可选方式：FAL 分区加载
 
 在 `settings` 中选择：
 
@@ -58,7 +80,7 @@ whd_res_download whd_nvram
 
 ![wifi](figures/wifi.gif)
 
-#### 拓展：Wi-Fi 资源随应用镜像烧录
+#### 当前方式：Wi-Fi 资源随应用镜像烧录
 
 如果希望 Wi-Fi 固件随着 `Debug/rtthread.hex` 一起烧进板子，可以切换为 `WHD_RESOURCES_IN_MEMORY` 模式：
 

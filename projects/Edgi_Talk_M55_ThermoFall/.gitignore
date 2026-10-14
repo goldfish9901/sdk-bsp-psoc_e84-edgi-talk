@@ -44,3 +44,10 @@ cconfig.h
 /rt-thread
 /tools
 /cmake-build-debug/
+
+# Local copies only; acquisition instructions are in README.md.
+/.settings/.rtmenus
+/figures/*.png
+/packages/aht10-latest/docs/aht10_datasheet_v1_1_181220.pdf
+/packages/cpu_usage-latest/figures/thread.png
+/packages/wavplayer-latest/samples/*.wav

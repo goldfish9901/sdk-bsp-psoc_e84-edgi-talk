@@ -4,6 +4,27 @@
 
 ## 简介
 
+### 本分支改动与 Env 复现
+
+当前仍默认运行上游的 **Virtual3D Animated Emoji**，不是温湿度实验界面。
+本分支把绿灯翻转间隔改为 **100 ms**，标题颜色改为 **`0xaaffff`**，并增加了
+编辑器配置和固定版本的 AHT10 子模块；子模块存在不代表应用已经启用 AHT20 页面。
+温湿度与摔倒融合实验见 [ThermoFall](../Edgi_Talk_M55_ThermoFall/README.md)。
+
+按 [公共构建说明](../README.md) 初始化 Env；需要恢复 AHT10 子模块时使用其中的固定提交。
+在本工程目录执行：
+
+```bat
+mklinks.bat
+scons -j12
+```
+
+`mklinks.bat` 只需在联接缺失时执行。SCons 生成根目录 `rt-thread.elf`、`rtthread.hex`
+和 `rtthread.map`；它们及 `build/`、`cmake-build-*` 沿用忽略规则，可由构建重新生成。
+项目根目录的 `.flash-target` 如需使用，应只写 `rtthread.hex`。
+Virtual3D 所需 `applications/virtual3d_emoji_demo/3d_demo/litegfx/vglite/liblx_vglite.a`
+是上游已提供的预编译库，不是 Env 可生成的产物，本次保留其原有 Git 管理方式。
+
 本示例工程基于 **Edgi-Talk 平台**，演示 **LVGL 图形库与多个显示示例**，运行在 **RT-Thread 实时操作系统** 的 **M55 应用核** 上。
 当前工程默认启动 **Virtual3D Animated Emoji** 示例，可用于验证 LCD 显示、触摸输入、LVGL 渲染流程以及 M55 侧图形加速相关配置；也可以切换到 LVGL 官方 Music、Benchmark、Stress 等示例，为后续 GUI 应用开发提供基础参考。
 

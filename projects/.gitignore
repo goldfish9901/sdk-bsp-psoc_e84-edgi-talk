@@ -8,3 +8,7 @@
 
 .metadata
 audit-output/
+
+# Local build outputs added by the experiment projects (keep text source/config).
+/Edgi_Talk_M33_Driver_All/compile_commands.json
+/Edgi_Talk_M55_XiaoZhi/scons_build.log
